@@ -73,6 +73,4 @@ void loop()
     checkIsobus();
 
     printStatus();
-
-    delay(1);
 }

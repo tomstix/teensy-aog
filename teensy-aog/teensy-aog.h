@@ -20,18 +20,18 @@
 struct TimingData
 {
     uint8_t sendCurveCommand = 40;
-    uint16_t lastSendCurveCommand = 0;
-    uint8_t checkIsobus = 50;
-    uint16_t lastCheckIsobus = 0;
+    uint32_t lastSendCurveCommand = 0;
+    uint8_t checkIsobus = 5;
+    uint32_t lastCheckIsobus = 0;
 
     uint8_t serialWorker = 10;
-    uint16_t lastSerialWorker = 0;
+    uint32_t lastSerialWorker = 0;
 
     uint16_t printStatus = 1000;
-    uint16_t lastprintStatus = 0;
+    uint32_t lastprintStatus = 0;
 
-    uint16_t lastCutout = 0;
-    uint16_t lastEnable = 0;
+    uint32_t lastCutout = 0;
+    uint32_t lastEnable = 0;
 };
 extern TimingData timingData;
 
@@ -132,7 +132,8 @@ struct IsobusData
     uint16_t frontPtoRpm;
     uint16_t rearPtoRpm;
 
-    uint16_t gmsEstimatedCurvature;
+    uint16_t gmsEstimatedCurvatureRaw;
+    int16_t gmsEstimatedCurvature;
     uint8_t steeringSystemReadiness;
     uint8_t remoteswitchStatus;
     uint8_t requestReset;

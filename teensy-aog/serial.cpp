@@ -63,7 +63,8 @@ int aogPgn;
 
 void serialWorker()
 {
-    if (millis() - timingData.lastSerialWorker > timingData.serialWorker)
+    unsigned long currentMillis = millis();
+    if (currentMillis - timingData.lastSerialWorker > timingData.serialWorker)
     {
         while (SerialUSB1.available() && !aogHeaderFound)
         {

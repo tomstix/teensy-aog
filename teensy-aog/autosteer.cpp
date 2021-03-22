@@ -1,6 +1,7 @@
 // 
 // 
 // 
+#include <ArduinoJson.h>
 #include "teensy-aog.h"
 #include "autosteer.h"
 #include "can.h"
@@ -41,11 +42,14 @@ void autosteerWorker()
 
     switch (aogSettings.InclinometerInstalled) //using inclino Setting to set workswitch type
     {
+    case 0:
+        switches.workSwitch = !steerSetpoints.enabled;
+        break;
     case 1:
         switches.workSwitch = (isobusData.rearHitchPosition > 128);
         break;
     case 2:
-        switches.workSwitch = (isobusData.rearPtoRpm == 0);
+        switches.workSwitch = (isobusData.rearPtoRpm < 80);
         break;
     default:
         break;
@@ -54,11 +58,33 @@ void autosteerWorker()
 
 void printStatus()
 {
-    if (millis() - timingData.lastprintStatus > timingData.printStatus)
+    unsigned long currentMillis = millis();
+    if (currentMillis - timingData.lastprintStatus > timingData.printStatus)
     {
         timingData.lastprintStatus = millis();
-        if (PRINT_DATA)
+        if (Serial.dtr())
         {
+            StaticJsonDocument<512> data;
+            JsonObject candata = data.createNestedObject("CAN-Data");
+
+            candata["mRPM"] = isobusData.motorRpm;
+            candata["WhlSpeed"] = isobusData.speed;
+            candata["rHitch"] = isobusData.rearHitchPosition;
+            candata["fHitch"] = isobusData.frontHitchPosition;
+            candata["rPTO"] = isobusData.rearPtoRpm;
+            candata["fPTO"] = isobusData.frontPtoRpm;
+            candata["GMSReset"] = isobusData.requestReset;
+            candata["GMSReady"] = isobusData.steeringSystemReadiness;
+            candata["GMSCurve"] = isobusData.gmsEstimatedCurvature;
+            candata["VBUSCurve"] = vbusData.estCurve;
+            candata["PGNrec"] = isobusData.pgn;
+            candata["ISO-RX/s"] = isobusData.rxCounter;
+            candata["ISO-F0-RX/s"] = isobusData.rxCounterF0;
+            candata["V-RX/s"] = vbusData.rxCounter;
+            candata["V-TX/s"] = vbusData.txCounter;
+            digitalToggle(13);
+
+            /*
             Serial.println("CAN-Data:");
             Serial.print("Motor RPM:\t"); Serial.println(isobusData.motorRpm);
             Serial.print("Wheelspeed:\t"); Serial.println(isobusData.speed);
@@ -74,7 +100,11 @@ void printStatus()
             Serial.print("Iso-Msg Rx (1s):\t"); Serial.println(isobusData.rxCounter);
             Serial.print("Iso-F0-Msg Rx (1s):\t"); Serial.println(isobusData.rxCounterF0);
             Serial.print("V-Msg Rx (1s):\t"); Serial.println(vbusData.rxCounter);
-            Serial.print("V-Msg Tx (1s):\t"); Serial.println(vbusData.txCounter);
+            Serial.print("V-Msg Tx (1s):\t"); Serial.println(vbusData.txCounter);*/
+
+            serializeJsonPretty(data, Serial);
+            //Serial.flush();
+            Serial.send_now();
         }
         isobusData.rxCounter = 0;
         isobusData.rxCounterF0 = 0;

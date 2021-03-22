@@ -73,8 +73,9 @@ void handleIsoFromF0(const CAN_message_t& msg)
 
 void sendCurveCommand()
 {
+    unsigned long currentMillis = millis();
     vbus.events();
-    if (millis() - timingData.lastSendCurveCommand > timingData.sendCurveCommand)
+    if (currentMillis - timingData.lastSendCurveCommand > timingData.sendCurveCommand)
     {
         timingData.lastSendCurveCommand = millis();
         if (steerSetpoints.enabled)
@@ -96,12 +97,14 @@ void sendCurveCommand()
     }
 }
 
+
 void checkIsobus()
 {
+    unsigned long currentMillis = millis();
     isobus.events();
-    if (millis() - timingData.lastCheckIsobus > timingData.checkIsobus)
+    if (currentMillis - timingData.lastCheckIsobus > timingData.checkIsobus)
     {
-        if (isobus.readMB(rxMsg))
+        if (isobus.readFIFO(rxMsg))
         {
             isobusData.rxCounter++;
             //Serial.println("Isobus Message!");
@@ -135,7 +138,8 @@ void checkIsobus()
                 isobusData.frontPtoRpm = rxMsg.buf[1] << 8 | rxMsg.buf[0];
                 break;
             case 0xAC00:
-                isobusData.gmsEstimatedCurvature = (rxMsg.buf[1] << 8 | rxMsg.buf[0]) - 8032;
+                isobusData.gmsEstimatedCurvatureRaw = (rxMsg.buf[1] << 8 | rxMsg.buf[0]);
+                isobusData.gmsEstimatedCurvature = isobusData.gmsEstimatedCurvatureRaw / 4 - 8032;
                 isobusData.requestReset = (rxMsg.buf[2] & 0b11000000) >> 6;
                 isobusData.steeringSystemReadiness = (rxMsg.buf[2] & 0b1100 >> 2);
                 break;
@@ -194,19 +198,22 @@ void initCAN()
     isobus.begin();
     isobus.setBaudRate(250000);
 
-    isobus.setMaxMB(3);
-    isobus.setMB(MB0, RX, EXT);
-    isobus.setMB(MB1, RX, EXT);
-    isobus.setMB(MB2, TX, EXT);
-    isobus.setMBFilter(MB0, REJECT_ALL);
-    isobus.setMBFilter(MB1, ACCEPT_ALL);
-    isobus.setMBUserFilter(MB0, 0x2CF0, 0xFFFF);
-    isobus.enableMBInterrupt(MB0);
-    isobus.onReceive(MB0, handleIsoFromF0);
+    isobus.setMaxMB(16);
+    isobus.enableFIFO();
+    isobus.setMB(MB8, RX, EXT); //For Messages to 2C
+    isobus.setMB(MB9, RX, EXT); //For Guidance Machine Status (0xAC00)
+    isobus.setMB(MB10, TX, EXT);
+    isobus.setMBFilter(MB8, REJECT_ALL);
+    isobus.setFIFOFilter(ACCEPT_ALL);
+    isobus.setMBUserFilter(MB8, 0x2CF0, 0xFFFF);
+    isobus.enableMBInterrupt(MB8);
+    isobus.onReceive(MB8, handleIsoFromF0);
     isobus.mailboxStatus();
+
+    isobus.distribute();
 
     isobus.write(addressClaimMsg);
 
     steerSetpoints.switchByte = 0;
-}
 
+}

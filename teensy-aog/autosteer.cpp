@@ -38,7 +38,7 @@ void autosteerWorker()
         }
     }
 
-    steerSetpoints.requestedSteerAngle = (steerSetpoints.requestedSteerAngle * aogSettings.AckermanFix + steerSetpoints.previousAngle * (100 - aogSettings.AckermanFix)) / 100.0;
+    //steerSetpoints.requestedSteerAngle = (steerSetpoints.requestedSteerAngle * aogSettings.AckermanFix + steerSetpoints.previousAngle * (100 - aogSettings.AckermanFix)) / 100.0;
 
     switch (aogSettings.InclinometerInstalled) //using inclino Setting to set workswitch type
     {

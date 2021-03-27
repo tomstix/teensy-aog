@@ -12,7 +12,7 @@
 
 #endif
 
-#define GPS Serial3
+#define GPS Serial5
 #define PRINT_DATA 1
 #define CMPSAddress 0x60
 #define aogVersion 17

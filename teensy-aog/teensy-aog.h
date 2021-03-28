@@ -88,7 +88,7 @@ struct SteerSetpoints
     float speed = 0;
     int16_t distanceFromLine = 32020;
     double requestedSteerAngle = 0;
-    double previousAngle = 0;
+    int16_t previousAngle = 0;
 
     bool enabled = false;
 

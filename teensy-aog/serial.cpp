@@ -94,7 +94,7 @@ void serialWorker()
                 steerSetpoints.distanceFromLine = (float)(SerialUSB1.read() << 8 | SerialUSB1.read()); //high,low bytes
 
                 //set point steer angle * 100 is sent
-                steerSetpoints.requestedSteerAngle = ((float)(SerialUSB1.read() << 8 | SerialUSB1.read())) * 0.01; //high low bytes
+                steerSetpoints.requestedSteerAngle = ((double)(SerialUSB1.read() << 8 | SerialUSB1.read())) * 0.01; //high low bytes
 
                 SerialUSB1.read();
                 SerialUSB1.read();

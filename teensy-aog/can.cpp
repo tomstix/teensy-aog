@@ -26,6 +26,8 @@ CAN_message_t steerStateReq;
 VbusData vbusData;
 IsobusData isobusData;
 
+int16_t sendAngle = 0;
+
 //***Interupt handlers begin
 void handleFromF0(const CAN_message_t& msg)
 {
@@ -80,16 +82,28 @@ void sendCurveCommand()
         timingData.lastSendCurveCommand = millis();
         if (steerSetpoints.enabled)
         {
-            vbusData.setCurve = (int16_t)(steerSetpoints.requestedSteerAngle * 819);
+            sendAngle = (int16_t) (steerSetpoints.requestedSteerAngle * 819);
+            if ((sendAngle - steerSetpoints.previousAngle) > 1500)
+            {
+                sendAngle = steerSetpoints.previousAngle + 1500;
+            }
+            else if ((sendAngle - steerSetpoints.previousAngle < -1500))
+            {
+                sendAngle = steerSetpoints.previousAngle - 1500;
+            }
+            vbusData.setCurve = sendAngle;
             curveCommandMsg.buf[2] = 3;
+
+            steerSetpoints.previousAngle = sendAngle;
         }
         else
         {
-            vbusData.setCurve = 0;
+            vbusData.setCurve = vbusData.estCurve;
+            steerSetpoints.previousAngle = (int16_t)(vbusData.estCurve * 819);
             curveCommandMsg.buf[2] = 2;
         }
-        curveCommandMsg.buf[4] = highByte(vbusData.setCurve);
-        curveCommandMsg.buf[5] = lowByte(vbusData.setCurve);
+        curveCommandMsg.buf[4] = highByte(sendAngle);
+        curveCommandMsg.buf[5] = lowByte(sendAngle);
 
         vbus.write(MB2, steerStateReq);
         vbus.write(MB1, curveCommandMsg);

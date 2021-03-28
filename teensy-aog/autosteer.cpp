@@ -46,7 +46,7 @@ void autosteerWorker()
         switches.workSwitch = !steerSetpoints.enabled;
         break;
     case 1:
-        switches.workSwitch = (isobusData.rearHitchPosition > 128);
+        switches.workSwitch = (isobusData.rearHitchPosition > 50);
         break;
     case 2:
         switches.workSwitch = (isobusData.rearPtoRpm < 80);

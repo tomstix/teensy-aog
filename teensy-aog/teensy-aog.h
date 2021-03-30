@@ -129,6 +129,7 @@ struct IsobusData
     uint16_t motorRpm;
     uint8_t frontHitchPosition;
     uint8_t rearHitchPosition;
+    uint8_t rearHitchWorking = 0;
     uint16_t frontPtoRpm;
     uint16_t rearPtoRpm;
 

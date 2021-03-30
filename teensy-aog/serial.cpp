@@ -86,6 +86,7 @@ void serialWorker()
             {
             case 0xFE:
             {
+                
                 //was section control lo byte
                 SerialUSB1.read();
                 steerSetpoints.speed = SerialUSB1.read() * 0.25; //actual speed times 4, single byte
@@ -94,7 +95,7 @@ void serialWorker()
                 steerSetpoints.distanceFromLine = (float)(SerialUSB1.read() << 8 | SerialUSB1.read()); //high,low bytes
 
                 //set point steer angle * 100 is sent
-                steerSetpoints.requestedSteerAngle = ((double)(SerialUSB1.read() << 8 | SerialUSB1.read())) * 0.01; //high low bytes
+                steerSetpoints.requestedSteerAngle = (float)((int16_t)((SerialUSB1.read() << 8) | (SerialUSB1.read()))) * 0.01; //high low bytes
 
                 SerialUSB1.read();
                 SerialUSB1.read();
@@ -193,7 +194,7 @@ void serialWorker()
                 //send usbData back - version number etc.
                 Serial.print("Settings received! Checksum: ");
                 Serial.println(checksum, DEC);
-                //SendTwoThirty((byte)checksum);
+                SendTwoThirty((byte)checksum);
 
                 EEPROM.put(40, aogSettings);
                 break;

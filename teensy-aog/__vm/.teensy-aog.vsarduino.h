@@ -20,7 +20,7 @@
 #define TEENSYDUINO 153
 #define ARDUINO 108013
 #define ARDUINO_TEENSY41
-#define F_CPU 600000000
+#define F_CPU 150000000
 #define USB_TRIPLE_SERIAL
 #define LAYOUT_GERMAN
 #define __cplusplus 201103L

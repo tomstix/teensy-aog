@@ -141,6 +141,7 @@ void checkIsobus()
                 break;
             case j1939PgnPHS:
                 isobusData.rearHitchPosition = rxMsg.buf[0];
+                isobusData.rearHitchWorking = rxMsg.buf[1] & 0b00000011;
                 break;
             case j1939PgnFHS:
                 isobusData.frontHitchPosition = rxMsg.buf[0];
@@ -202,7 +203,7 @@ void initCAN()
     vbus.setMB(MB1, TX, EXT); //MB1 used to transmit curve command
     vbus.setMB(MB2, TX, EXT); //MB2 used to transmit cutout request
     vbus.setMBFilter(REJECT_ALL);
-    vbus.enableMBInterrupts();
+    vbus.enableMBInterrupt(MB0);
     vbus.onReceive(MB0, handleFromF0);
     vbus.setMBUserFilter(MB0, 0x2CF0, 0xFFFF);
     vbus.mailboxStatus();

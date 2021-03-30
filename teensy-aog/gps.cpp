@@ -19,7 +19,9 @@ void gpsWorker()
     while (GPS.available())
     {
         char c = GPS.read();
-        SerialUSB2.write(c);
+        //if (SerialUSB2.dtr()) {
+            SerialUSB2.write(c);
+        //}
         if (nmea.process(c))
         {
             if (send)   //Only send Data every second NMEA String (GGA & VTG are received)
@@ -29,12 +31,15 @@ void gpsWorker()
                 {
                     cmpsWorker();
                 }
-                sendDataToAOG();
+                if (SerialUSB1.dtr()) {
+                    sendDataToAOG();
+                }
             }
             else
                 send = true;
         }
     }
+    SerialUSB2.flush();
     while (SerialUSB2.available())
     {
         GPS.write(SerialUSB2.read());

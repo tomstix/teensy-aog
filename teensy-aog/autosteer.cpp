@@ -70,6 +70,7 @@ void printStatus()
             candata["mRPM"] = isobusData.motorRpm;
             candata["WhlSpeed"] = isobusData.speed;
             candata["rHitch"] = isobusData.rearHitchPosition;
+            candata["rHitchWork"] = isobusData.rearHitchWorking;
             candata["fHitch"] = isobusData.frontHitchPosition;
             candata["rPTO"] = isobusData.rearPtoRpm;
             candata["fPTO"] = isobusData.frontPtoRpm;
@@ -82,6 +83,8 @@ void printStatus()
             candata["ISO-F0-RX/s"] = isobusData.rxCounterF0;
             candata["V-RX/s"] = vbusData.rxCounter;
             candata["V-TX/s"] = vbusData.txCounter;
+            candata["setcurve"] = vbusData.setCurve;
+            candata["requestAngle"] = steerSetpoints.requestedSteerAngle;
             digitalToggle(13);
 
             /*

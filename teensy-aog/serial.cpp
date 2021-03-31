@@ -6,6 +6,7 @@
 
 #include "teensy-aog.h"
 #include "autosteer.h"
+#include "cmps.h"
 
 #include <EEPROM.h>
 
@@ -63,8 +64,7 @@ int aogPgn;
 
 void serialWorker()
 {
-    unsigned long currentMillis = millis();
-    if (currentMillis - timingData.lastSerialWorker > timingData.serialWorker)
+    if (metro.serial.check() == 1)
     {
         while (SerialUSB1.available() && !aogHeaderFound)
         {
@@ -101,6 +101,11 @@ void serialWorker()
                 SerialUSB1.read();
                 steerSetpoints.lastPacketReceived = millis();
                 autosteerWorker();
+                if (aogSettings.BNOInstalled)
+                {
+                    cmpsWorker();
+                }
+                sendDataToAOG();
                 break;
             }
             case 0xFA:

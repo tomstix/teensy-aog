@@ -18,6 +18,8 @@
 #include <circular_buffer.h>
 #endif*/
 
+
+
 void initCAN();
 void checkIsobus();
 void sendCurveCommand();

@@ -75,11 +75,9 @@ void handleIsoFromF0(const CAN_message_t& msg)
 
 void sendCurveCommand()
 {
-    unsigned long currentMillis = millis();
     vbus.events();
-    if (currentMillis - timingData.lastSendCurveCommand > timingData.sendCurveCommand)
+    if (metro.sendCurveCommand.check() == 1)
     {
-        timingData.lastSendCurveCommand = millis();
         if (steerSetpoints.enabled)
         {
             sendAngle = (int16_t) (steerSetpoints.requestedSteerAngle * 819);
@@ -114,10 +112,10 @@ void sendCurveCommand()
 
 void checkIsobus()
 {
-    unsigned long currentMillis = millis();
     isobus.events();
-    if (currentMillis - timingData.lastCheckIsobus > timingData.checkIsobus)
+    if (metro.checkIsobus.check() == 1)
     {
+        //isobus.mailboxStatus();
         if (isobus.readFIFO(rxMsg))
         {
             isobusData.rxCounter++;
@@ -213,19 +211,21 @@ void initCAN()
     isobus.begin();
     isobus.setBaudRate(250000);
 
-    isobus.setMaxMB(16);
+    isobus.setMaxMB(10);
     isobus.enableFIFO();
-    isobus.setMB(MB8, RX, EXT); //For Messages to 2C
-    isobus.setMB(MB9, RX, EXT); //For Guidance Machine Status (0xAC00)
-    isobus.setMB(MB10, TX, EXT);
-    isobus.setMBFilter(MB8, REJECT_ALL);
-    isobus.setFIFOFilter(ACCEPT_ALL);
+    isobus.setMB(MB8, RX, EXT); //For Messages to 2C from F0
+    isobus.setMB(MB9, TX, EXT);
+    isobus.setMBFilter(REJECT_ALL);
+    isobus.setFIFOFilter(REJECT_ALL);
+    isobus.setFIFOUserFilter(0, 0xF00400, 0xFFFF00, EXT);
+    isobus.setFIFOUserFilter(1, 0xAC0000, 0xFF0000, EXT);
+    isobus.setFIFOUserFilter(2, 0xFE4300, 0xFE4400, 0xFE4500, 0xFE4600, 0xFFFF00, EXT);
+    isobus.setFIFOUserFilter(3, 0xFE4700, 0xFE4800, 0xFFFF00, EXT);
+
     isobus.setMBUserFilter(MB8, 0x2CF0, 0xFFFF);
     isobus.enableMBInterrupt(MB8);
     isobus.onReceive(MB8, handleIsoFromF0);
     isobus.mailboxStatus();
-
-    isobus.distribute();
 
     isobus.write(addressClaimMsg);
 

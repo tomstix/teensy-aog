@@ -49,7 +49,7 @@ void autosteerWorker()
         switches.workSwitch = (isobusData.rearHitchPosition > 50);
         break;
     case 2:
-        switches.workSwitch = (isobusData.rearPtoRpm < 80);
+        switches.workSwitch = (isobusData.rearPtoRpm < 150);
         break;
     default:
         break;
@@ -58,10 +58,8 @@ void autosteerWorker()
 
 void printStatus()
 {
-    unsigned long currentMillis = millis();
-    if (currentMillis - timingData.lastprintStatus > timingData.printStatus)
+    if (metro.printStatus.check() == 1)
     {
-        timingData.lastprintStatus = millis();
         if (Serial.dtr())
         {
             StaticJsonDocument<512> data;
@@ -85,6 +83,7 @@ void printStatus()
             candata["V-TX/s"] = vbusData.txCounter;
             candata["setcurve"] = vbusData.setCurve;
             candata["requestAngle"] = steerSetpoints.requestedSteerAngle;
+            candata["cycletime"] = timingData.cycleTime;
             digitalToggle(13);
 
             /*

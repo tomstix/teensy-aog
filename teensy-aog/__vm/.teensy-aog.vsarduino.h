@@ -15,12 +15,11 @@
 #define _VSARDUINO_H_
 #define __HARDWARE_imxrt1062__
 #define __HARDWARE_IMXRT1062__
-#define _VMDEBUG 1
 #define __IMXRT1062__
 #define TEENSYDUINO 153
 #define ARDUINO 108013
 #define ARDUINO_TEENSY41
-#define F_CPU 150000000
+#define F_CPU 450000000
 #define USB_TRIPLE_SERIAL
 #define LAYOUT_GERMAN
 #define __cplusplus 201103L

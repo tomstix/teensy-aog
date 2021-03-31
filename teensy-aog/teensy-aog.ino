@@ -10,14 +10,12 @@
 #include "serial.h"
 #include "gps.h"
 #include "cmps.h"
-#include <eeprom.h>
+#include <EEPROM.h>
 #define EEP_Ident 4310
 
-/*TimingData timingData;
-SteerSetpoints steerSetpoints;
-AOGSetup aogSettings;
-SteerSettings steerSettings;
-Switches switches;*/
+Metros metro;
+
+uint32_t cycleTimer = 0;
 
 
 void loadSettings()
@@ -42,9 +40,7 @@ void loadSettings()
 
 void setup()
 {
-    delay(700);
-
-    pinMode(26, INPUT_PULLUP);
+    delay(1000);
     pinMode(13, OUTPUT);
 
     Serial.begin(115200);
@@ -65,6 +61,8 @@ void setup()
 
 void loop()
 {
+    timingData.cycleTime = millis() - cycleTimer;
+    cycleTimer = millis();
     serialWorker();
 
     gpsWorker();

@@ -17,6 +17,8 @@
 #define CMPSAddress 0x60
 #define aogVersion 17
 
+#define benchmode 1
+
 #include <Metro.h>
 
 struct Metros

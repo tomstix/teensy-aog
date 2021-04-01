@@ -17,17 +17,34 @@ bool send = true;
 
 void gpsWorker()
 {
-	while (GPS.available())
-	{
-		SerialUSB2.write(GPS.read());
-	}
+		while (GPS.available())
+		{
+			timingData.gpsByteCounter++;
+			char c = GPS.read();
+			if (nmea.process(c)) {
+				String id = nmea.getMessageID();
+				if (id == "GGA") {
+					timingData.gpsCounter++;
+					gpsData.speed = nmea.getSpeed();
+					gpsData.seconds = nmea.getSecond();
+					Serial.println(nmea.getSentence());
+					if (aogSettings.BNOInstalled)
+					{
+						cmpsWorker();
+					}
+					digitalToggle(13);
+				}
+				else if (id == "VTG") {
+					Serial.println(nmea.getSentence());
+				}
+			}
+		}
 
-
-	if (SerialUSB2.available() > 0)
-	{
-		uint8_t c = SerialUSB2.read();
-		GPS.write(c);
-	}
+		while (Serial.available() > 0)
+		{
+			GPS.write(Serial.read());
+		}
+		GPS.flush();
 }
 
 void initGPS()

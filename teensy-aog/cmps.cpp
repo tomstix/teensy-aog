@@ -15,12 +15,12 @@ void initCMPS()
     if (Wire.requestFrom(CMPSAddress, 1) > 0)
     {
         byte reading = Wire.read();
-        Serial.print("CMPS Software Version: ");
-        Serial.println(reading);
+        SerialUSB2.print("CMPS Software Version: ");
+        SerialUSB2.println(reading);
     }
     else
     {
-        Serial.println("CMPS init failed!");
+        SerialUSB2.println("CMPS init failed!");
     }
 }
 

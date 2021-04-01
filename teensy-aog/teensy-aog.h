@@ -46,6 +46,9 @@ struct TimingData
 	uint32_t lastEnable = 0;
 
 	uint32_t cycleTime;
+
+	uint8_t gpsCounter = 0;
+	uint32_t gpsByteCounter = 0;
 };
 extern TimingData timingData;
 
@@ -127,6 +130,7 @@ extern Switches switches;
 struct GPSData
 {
 	long speed = 0;
+	uint8_t seconds = 0;
 };
 extern GPSData gpsData;
 

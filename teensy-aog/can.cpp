@@ -35,11 +35,11 @@ void handleFromF0(const CAN_message_t& msg)
     //Serial.println("Message for me from F0!");
     if (msg.len == 3 && msg.buf[2] == 0)
     {
-        Serial.println("Cutout!");
+        SerialUSB2.println("Cutout!");
         vbusData.cutoutCAN = 1;
         timingData.lastCutout = millis();
         switches.steerSwitch = 1;
-        //Serial.println(switches.steerSwitch);
+        //SerialUSB2.println(switches.steerSwitch);
     }
     if (msg.len == 8 && msg.buf[0] == 5 && msg.buf[1] == 10)
     {
@@ -59,7 +59,7 @@ void handleIsoFromF0(const CAN_message_t& msg)
 
         if ((msg.buf[2]) == 0x01)
         {
-            Serial.println("\t Steering GO!! ");
+            SerialUSB2.println("\t Steering GO!! ");
             switches.steerSwitch = 0; //enable steerswitch
             vbusData.cutoutCAN = 0;   //reset cutout
             timingData.lastEnable = millis();
@@ -204,7 +204,7 @@ void initCAN()
     vbus.enableMBInterrupt(MB0);
     vbus.onReceive(MB0, handleFromF0);
     vbus.setMBUserFilter(MB0, 0x2CF0, 0xFFFF);
-    vbus.mailboxStatus();
+    //vbus.mailboxStatus();
 
     vbus.write(addressClaimMsg); //claim VBUS address 2C
 
@@ -225,7 +225,7 @@ void initCAN()
     isobus.setMBUserFilter(MB8, 0x2CF0, 0xFFFF);
     isobus.enableMBInterrupt(MB8);
     isobus.onReceive(MB8, handleIsoFromF0);
-    isobus.mailboxStatus();
+    //isobus.mailboxStatus();
 
     isobus.write(addressClaimMsg);
 

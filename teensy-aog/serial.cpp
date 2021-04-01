@@ -101,11 +101,6 @@ void serialWorker()
                 SerialUSB1.read();
                 steerSetpoints.lastPacketReceived = millis();
                 autosteerWorker();
-                if (aogSettings.BNOInstalled)
-                {
-                    cmpsWorker();
-                }
-                sendDataToAOG();
                 break;
             }
             case 0xFA:
@@ -197,8 +192,8 @@ void serialWorker()
                 checksum += reed;
 
                 //send usbData back - version number etc.
-                Serial.print("Settings received! Checksum: ");
-                Serial.println(checksum, DEC);
+                SerialUSB2.print("Settings received! Checksum: ");
+                SerialUSB2.println(checksum, DEC);
                 SendTwoThirty((byte)checksum);
 
                 EEPROM.put(40, aogSettings);
@@ -243,8 +238,8 @@ void serialWorker()
                 steerSettings.steerSensorCounts = reed; //sent as 10 times the setting displayed in AOG
 
                 //send usbData back - version number.
-                Serial.print("Settings received! Checksum: ");
-                Serial.println(checksum, DEC);
+                SerialUSB2.print("Settings received! Checksum: ");
+                SerialUSB2.println(checksum, DEC);
                 SendTwoThirty((byte)checksum);
 
                 EEPROM.put(10, steerSettings);

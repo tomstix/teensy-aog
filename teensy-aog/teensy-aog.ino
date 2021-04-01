@@ -25,7 +25,7 @@ void loadSettings()
     EEPROM.get(0, EEread);
     if (EEread == EEP_Ident)
     {
-        Serial.println("Settings found!");
+        SerialUSB2.println("Settings found!");
         EEPROM.get(10, steerSettings);
         EEPROM.get(40, aogSettings);
     }
@@ -43,7 +43,7 @@ void setup()
     delay(1000);
     pinMode(13, OUTPUT);
 
-    Serial.begin(115200);
+    SerialUSB2.begin(115200);
 
     loadSettings();
 
@@ -61,8 +61,8 @@ void setup()
 
 void loop()
 {
-    timingData.cycleTime = millis() - cycleTimer;
-    cycleTimer = millis();
+    timingData.cycleTime = micros() - cycleTimer;
+    cycleTimer = micros();
     serialWorker();
 
     gpsWorker();

@@ -5,6 +5,9 @@
 #include "teensy-aog.h"
 #include "autosteer.h"
 #include "can.h"
+#include "serial.h"
+#include "cmps.h"
+#include "gps.h"
 
 TimingData timingData;
 AOGSetup aogSettings;
@@ -54,16 +57,19 @@ void autosteerWorker()
     default:
         break;
     }
+
+    sendDataToAOG();
 }
 
 void printStatus()
 {
     if (metro.printStatus.check() == 1)
     {
-        if (Serial.dtr())
+        if (SerialUSB2.dtr())
         {
             StaticJsonDocument<512> data;
             JsonObject candata = data.createNestedObject("CAN-Data");
+            JsonObject general = data.createNestedObject("General");
 
             candata["mRPM"] = isobusData.motorRpm;
             candata["WhlSpeed"] = isobusData.speed;
@@ -82,35 +88,23 @@ void printStatus()
             candata["V-RX/s"] = vbusData.rxCounter;
             candata["V-TX/s"] = vbusData.txCounter;
             candata["setcurve"] = vbusData.setCurve;
-            candata["requestAngle"] = steerSetpoints.requestedSteerAngle;
-            candata["cycletime"] = timingData.cycleTime;
-            digitalToggle(13);
 
-            /*
-            Serial.println("CAN-Data:");
-            Serial.print("Motor RPM:\t"); Serial.println(isobusData.motorRpm);
-            Serial.print("Wheelspeed:\t"); Serial.println(isobusData.speed);
-            Serial.print("Rear Hitch:\t"); Serial.println(isobusData.rearHitchPosition);
-            Serial.print("Front Hitch:\t"); Serial.println(isobusData.frontHitchPosition);
-            Serial.print("Rear PTO:\t"); Serial.println(isobusData.rearPtoRpm);
-            Serial.print("Front PTO:\t"); Serial.println(isobusData.frontPtoRpm);
-            Serial.print("GMS Request Reset:\t"); Serial.println(isobusData.requestReset, BIN);
-            Serial.print("GMS Readiness:\t"); Serial.println(isobusData.steeringSystemReadiness, BIN);
-            Serial.print("GMS Curve:\t"); Serial.println(isobusData.gmsEstimatedCurvature, HEX);
-            Serial.print("VBUS Curve:\t"); Serial.println(vbusData.estCurve, HEX);
-            Serial.print("Last received PGN:\t"); Serial.println(isobusData.pgn);
-            Serial.print("Iso-Msg Rx (1s):\t"); Serial.println(isobusData.rxCounter);
-            Serial.print("Iso-F0-Msg Rx (1s):\t"); Serial.println(isobusData.rxCounterF0);
-            Serial.print("V-Msg Rx (1s):\t"); Serial.println(vbusData.rxCounter);
-            Serial.print("V-Msg Tx (1s):\t"); Serial.println(vbusData.txCounter);*/
 
-            serializeJsonPretty(data, Serial);
-            //Serial.flush();
-            Serial.send_now();
+            general["requestAngle"] = steerSetpoints.requestedSteerAngle;
+            general["cycletime"] = timingData.cycleTime;
+            general["gps/s"] = timingData.gpsCounter;
+            general["gpsBytes/s"] = timingData.gpsByteCounter;
+            general["seconds"] = gpsData.seconds;
+            general["GPS Speed"] = gpsData.speed*1000;
+
+            serializeJsonPretty(data, SerialUSB2);
+            SerialUSB2.send_now();
         }
         isobusData.rxCounter = 0;
         isobusData.rxCounterF0 = 0;
         vbusData.txCounter = 0;
         vbusData.rxCounter = 0;
+        timingData.gpsCounter = 0;
+        timingData.gpsByteCounter = 0;
     }
 }

@@ -40,11 +40,13 @@ void gpsWorker()
 			}
 		}
 
-		while (Serial.available() > 0)
+		int avail = GPS.availableForWrite();
+		while (Serial.available() > 0 && counter < avail)
 		{
+			counter++;
 			GPS.write(Serial.read());
 		}
-		GPS.flush();
+		counter = 0;
 }
 
 void initGPS()

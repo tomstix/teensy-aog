@@ -97,10 +97,12 @@ void printStatus()
 
             general["requestAngle"] = steerSetpoints.requestedSteerAngle;
             general["cycletime"] = timingData.cycleTime;
+            general["maxcycle"] = timingData.maxCycleTime;
             general["gps/s"] = timingData.gpsCounter;
             general["gpsBytes/s"] = timingData.gpsByteCounter;
             general["seconds"] = gpsData.seconds;
             general["GPS Speed"] = gpsData.speed*1000;
+            general["Roll"] = steerSetpoints.roll;
 
             serializeJsonPretty(data, SerialUSB2);
             SerialUSB2.send_now();

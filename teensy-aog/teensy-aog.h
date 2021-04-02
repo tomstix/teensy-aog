@@ -17,7 +17,7 @@
 #define CMPSAddress 0x60
 #define aogVersion 17
 
-#define benchmode 1
+#define benchmode 0
 
 #include <Metro.h>
 
@@ -28,6 +28,7 @@ struct Metros
 	Metro printStatus = Metro(1000);
 	Metro gps = Metro(10);
 	Metro serial = Metro(10);
+	Metro resetCycle = Metro(10000);
 };
 extern Metros metro;
 
@@ -48,6 +49,7 @@ struct TimingData
 	uint32_t lastEnable = 0;
 
 	uint32_t cycleTime;
+	uint32_t maxCycleTime = 0;
 
 	uint8_t gpsCounter = 0;
 	uint32_t gpsByteCounter = 0;

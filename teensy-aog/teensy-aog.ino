@@ -62,7 +62,18 @@ void setup()
 void loop()
 {
     timingData.cycleTime = micros() - cycleTimer;
+    if (timingData.cycleTime > timingData.maxCycleTime)
+    {
+        timingData.maxCycleTime = timingData.cycleTime;
+    }
+    if (timingData.maxCycleTime > 1000000) timingData.maxCycleTime = 0;
     cycleTimer = micros();
+
+    if (metro.resetCycle.check() == 1)
+    {
+        timingData.maxCycleTime = 0;
+    }
+
     serialWorker();
 
     gpsWorker();
@@ -71,4 +82,6 @@ void loop()
     checkIsobus();
 
     printStatus();
+
+    //delayMicroseconds(100);
 }

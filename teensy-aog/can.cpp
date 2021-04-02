@@ -8,6 +8,7 @@
 
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> vbus;
 FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> isobus;
+FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> kbus;
 
 
 CAN_message_t rxMsg;

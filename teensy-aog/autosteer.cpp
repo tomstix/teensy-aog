@@ -20,7 +20,9 @@ void autosteerWorker()
     if (benchmode)
     {
         pinMode(14, INPUT);
-        steerSetpoints.actualSteerAngle = ((float)map(analogRead(14), 0, 1023, -400, 400)) * 0.1;
+        int val = analogRead(14);
+        steerSetpoints.actualSteerAngle = ((float)map(val, 0, 1023, -400, 400)) * 0.1;
+        steerSetpoints.roll = ((float)map(val, 0, 1023, -300, 300)) * 0.1;
     }
 
     if ((steerSetpoints.distanceFromLine == 32020) | (steerSetpoints.distanceFromLine == 32000) | (steerSetpoints.speed < aogSettings.minSteerSpeed) | (steerSetpoints.speed > aogSettings.maxSteerSpeed) | ((millis() - steerSetpoints.lastPacketReceived) > 500))

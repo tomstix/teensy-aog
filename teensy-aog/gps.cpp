@@ -8,10 +8,8 @@ GPSData gpsData;
 
 byte nmeaBuffer[100];
 MicroNMEA nmea(nmeaBuffer, sizeof(nmeaBuffer));
-byte temp;
-uint8_t counter = 0;
 
-uint8_t lastHundreths = 0;
+uint8_t counter = 0;
 
 bool send = true;
 

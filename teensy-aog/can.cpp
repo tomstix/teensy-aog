@@ -29,10 +29,33 @@ IsobusData isobusData;
 
 int16_t sendAngle = 0;
 
+void addressClaim()
+{
+    if (metro.sendAdressClaim.check() == 1) {
+        //Set up CAN Messages to send
+        CAN_message_t addressClaimMsg;
+        addressClaimMsg.flags.extended = true;
+        addressClaimMsg.id = 0x18EEFF2C;
+        addressClaimMsg.len = 8;
+        addressClaimMsg.buf[0] = 0x00;
+        addressClaimMsg.buf[1] = 0x00;
+        addressClaimMsg.buf[2] = 0xC0;
+        addressClaimMsg.buf[3] = 0x0C;
+        addressClaimMsg.buf[4] = 0x00;
+        addressClaimMsg.buf[5] = 0x17;
+        addressClaimMsg.buf[6] = 0x02;
+        addressClaimMsg.buf[7] = 0x20;
+
+        vbus.write(addressClaimMsg); //claim VBUS address 2C
+        isobus.write(addressClaimMsg);
+    }
+}
+
 //***Interupt handlers begin
 void handleFromF0(const CAN_message_t& msg)
 {
     vbusData.rxCounter++;
+    timingData.lastCANRx = millis();
     //Serial.println("Message for me from F0!");
     if (msg.len == 3 && msg.buf[2] == 0)
     {
@@ -76,6 +99,10 @@ void handleIsoFromF0(const CAN_message_t& msg)
 
 void sendCurveCommand()
 {
+    if (millis() - timingData.lastCANRx > 1000)
+    {
+        addressClaim();
+    }
     vbus.events();
     if (metro.sendCurveCommand.check() == 1)
     {
@@ -164,20 +191,6 @@ void checkIsobus()
 
 void initCAN()
 {
-    //Set up CAN Messages to send
-    CAN_message_t addressClaimMsg;
-    addressClaimMsg.flags.extended = true;
-    addressClaimMsg.id = 0x18EEFF2C;
-    addressClaimMsg.len = 8;
-    addressClaimMsg.buf[0] = 0x00;
-    addressClaimMsg.buf[1] = 0x00;
-    addressClaimMsg.buf[2] = 0xC0;
-    addressClaimMsg.buf[3] = 0x0C;
-    addressClaimMsg.buf[4] = 0x00;
-    addressClaimMsg.buf[5] = 0x17;
-    addressClaimMsg.buf[6] = 0x02;
-    addressClaimMsg.buf[7] = 0x20;
-
     curveCommandMsg.flags.extended = true;
     curveCommandMsg.id = 0x0CEFF02C;
     curveCommandMsg.len = 6;
@@ -207,8 +220,6 @@ void initCAN()
     vbus.setMBUserFilter(MB0, 0x2CF0, 0xFFFF);
     //vbus.mailboxStatus();
 
-    vbus.write(addressClaimMsg); //claim VBUS address 2C
-
     isobus.begin();
     isobus.setBaudRate(250000);
 
@@ -227,8 +238,6 @@ void initCAN()
     isobus.enableMBInterrupt(MB8);
     isobus.onReceive(MB8, handleIsoFromF0);
     //isobus.mailboxStatus();
-
-    isobus.write(addressClaimMsg);
 
     steerSetpoints.switchByte = 0;
 

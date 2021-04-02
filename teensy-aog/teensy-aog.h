@@ -29,22 +29,12 @@ struct Metros
 	Metro gps = Metro(10);
 	Metro serial = Metro(10);
 	Metro resetCycle = Metro(10000);
+	Metro sendAdressClaim = Metro(1000);
 };
 extern Metros metro;
 
 struct TimingData
 {
-	/*uint8_t sendCurveCommand = 40;
-	uint32_t lastSendCurveCommand = 0;
-	uint8_t checkIsobus = 5;
-	uint32_t lastCheckIsobus = 0;
-
-	uint8_t serialWorker = 10;
-	uint32_t lastSerialWorker = 0;
-
-	uint16_t printStatus = 1000;
-	uint32_t lastprintStatus = 0;*/
-
 	uint32_t lastCutout = 0;
 	uint32_t lastEnable = 0;
 
@@ -53,6 +43,8 @@ struct TimingData
 
 	uint8_t gpsCounter = 0;
 	uint32_t gpsByteCounter = 0;
+
+	uint32_t lastCANRx = 0;
 };
 extern TimingData timingData;
 

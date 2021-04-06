@@ -62,7 +62,7 @@ void serialWorker()
 
 	if (SerialUSB1.available() > 1 && !isHeaderFound && !isPGNFound)
 	{
-		byte temp = Serial.read();
+		byte temp = SerialUSB1.read();
 		if (tempHeader == start && temp == second)
 		{
 			isHeaderFound = true;
@@ -89,8 +89,8 @@ void serialWorker()
 		{
 		case 0xFE:
 		{
-			steerSetpoints.speed = ((float)(Serial.read() | Serial.read() << 8)) * 0.1;
-			steerSetpoints.guidanceStatus = Serial.read();
+			steerSetpoints.speed = ((float)(SerialUSB1.read() | SerialUSB1.read() << 8)) * 0.1;
+			steerSetpoints.guidanceStatus = SerialUSB1.read();
 			steerSetpoints.requestedSteerAngle = (float)((int16_t)(SerialUSB1.read() | SerialUSB1.read() << 8)) * 0.01;
 			steerSetpoints.tram = SerialUSB1.read();
 			steerSetpoints.sections = SerialUSB1.read() << 8 | SerialUSB1.read();
@@ -106,25 +106,25 @@ void serialWorker()
 		case 0xFC:
 		{
 			//PID values
-			steerSettings.Kp = ((float)Serial.read());   // read Kp from AgOpenGPS
+			steerSettings.Kp = ((float)SerialUSB1.read());   // read Kp from AgOpenGPS
 			steerSettings.Kp *= 0.5;
 
-			steerSettings.highPWM = Serial.read();
+			steerSettings.highPWM = SerialUSB1.read();
 
-			steerSettings.lowPWM = (float)Serial.read();   // read lowPWM from AgOpenGPS
+			steerSettings.lowPWM = (float)SerialUSB1.read();   // read lowPWM from AgOpenGPS
 
-			steerSettings.minPWM = Serial.read(); //read the minimum amount of PWM for instant on
+			steerSettings.minPWM = SerialUSB1.read(); //read the minimum amount of PWM for instant on
 
-			steerSettings.steerSensorCounts = Serial.read(); //sent as setting displayed in AOG
+			steerSettings.steerSensorCounts = SerialUSB1.read(); //sent as setting displayed in AOG
 
-			steerSettings.wasOffset = (Serial.read());  //read was zero offset Hi
+			steerSettings.wasOffset = (SerialUSB1.read());  //read was zero offset Hi
 
-			steerSettings.wasOffset |= (Serial.read() << 8);  //read was zero offset Lo
+			steerSettings.wasOffset |= (SerialUSB1.read() << 8);  //read was zero offset Lo
 
-			steerSettings.AckermanFix = (float)Serial.read() * 0.01;
+			steerSettings.AckermanFix = (float)SerialUSB1.read() * 0.01;
 
 			//crc
-			Serial.read();
+			SerialUSB1.read();
 
 			//store in EEPROM
 			EEPROM.put(10, steerSettings);
@@ -137,7 +137,7 @@ void serialWorker()
 
 		case 0xFB: //FB - steerConfig
 		{
-			byte sett = Serial.read();
+			byte sett = SerialUSB1.read();
 
 			if (bitRead(sett, 0)) steerConfig.InvertWAS = 1; else steerConfig.InvertWAS = 0;
 			if (bitRead(sett, 1)) steerConfig.isRelayActiveHigh = 1; else steerConfig.isRelayActiveHigh = 0;
@@ -147,22 +147,22 @@ void serialWorker()
 			if (bitRead(sett, 5)) steerConfig.SteerSwitch = 1; else steerConfig.SteerSwitch = 0;
 			if (bitRead(sett, 6)) steerConfig.ShaftEncoder = 1; else steerConfig.ShaftEncoder = 0;
 
-			steerConfig.PulseCountMax = Serial.read();
+			steerConfig.PulseCountMax = SerialUSB1.read();
 
 			//was speed
-			Serial.read();
+			SerialUSB1.read();
 
 			//Danfoss type hydraulics
-			steerConfig.isDanfoss = Serial.read(); //byte 8
+			steerConfig.isDanfoss = SerialUSB1.read(); //byte 8
 
-			Serial.read(); //byte 9
-			Serial.read(); //byte 10
+			SerialUSB1.read(); //byte 9
+			SerialUSB1.read(); //byte 10
 
-			Serial.read(); //byte 11
-			Serial.read(); //byte 12
+			SerialUSB1.read(); //byte 11
+			SerialUSB1.read(); //byte 12
 
 			//crc byte 13
-			Serial.read();
+			SerialUSB1.read();
 
 			EEPROM.put(40, steerConfig);
 

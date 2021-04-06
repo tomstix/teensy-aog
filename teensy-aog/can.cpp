@@ -99,7 +99,7 @@ void handleIsoFromF0(const CAN_message_t& msg)
 
 void sendCurveCommand()
 {
-	if (millis() - timingData.lastCANRx > 1000 & metro.sendAdressClaim.check() == 1) //claim address if no one is talking to you
+	if ((millis() - timingData.lastCANRx > 1000) & (metro.sendAdressClaim.check() == 1)) //claim address if no one is talking to you
 	{
 		addressClaim();
 	}

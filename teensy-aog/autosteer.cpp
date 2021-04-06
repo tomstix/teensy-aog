@@ -25,7 +25,7 @@ void autosteerWorker()
         steerSetpoints.roll = ((float)map(val, 0, 1023, -300, 300)) * 0.1;
     }
 
-    if ((!steerSetpoints.guidanceStatus | (millis() - steerSetpoints.lastPacketReceived) > 500))
+    if ((!steerSetpoints.guidanceStatus | ((millis() - steerSetpoints.lastPacketReceived) > 500)))
     {
         if (steerSetpoints.enabled)
         {

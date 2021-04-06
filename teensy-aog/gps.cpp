@@ -24,7 +24,7 @@ void gpsWorker()
 					gpsData.speed = nmea.getSpeed();
 					gpsData.seconds = nmea.getSecond();
 					Serial.println(nmea.getSentence());
-					if (steerConfig.BNOInstalled)
+					if (steerSetpoints.useCMPS)
 					{
 						cmpsWorker();
 					}

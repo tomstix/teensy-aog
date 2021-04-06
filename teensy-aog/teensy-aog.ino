@@ -47,10 +47,7 @@ void setup()
 
     loadSettings();
 
-    if (steerConfig.BNOInstalled)
-    {
-        initCMPS();
-    }
+    initCMPS();
 
     initCAN();
     initGPS();

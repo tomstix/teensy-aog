@@ -99,6 +99,7 @@ void serialWorker()
 			pgn = length = 0;
 
 			steerSetpoints.lastPacketReceived = millis();
+			autosteerWorker();
 			break;
 		}
 

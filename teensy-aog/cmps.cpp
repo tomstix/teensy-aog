@@ -17,10 +17,12 @@ void initCMPS()
         byte reading = Wire.read();
         SerialUSB2.print("CMPS Software Version: ");
         SerialUSB2.println(reading);
+        steerSetpoints.useCMPS = true;
     }
     else
     {
         SerialUSB2.println("CMPS init failed!");
+        steerSetpoints.useCMPS = false;
     }
 }
 
@@ -61,7 +63,9 @@ int16_t requestTwoSigned(int address, int readReg)
 
 void cmpsWorker()
 {
-    steerSetpoints.heading = ((float)requestBytes(CMPSAddress, 0x02, 2)) / 10.0;
-    steerSetpoints.roll = ((float)requestTwoSigned(CMPSAddress, 0x1C)) / 10.0;
+    steerSetpoints.headingInt = requestBytes(CMPSAddress, 0x02, 2);
+    steerSetpoints.rollInt = requestTwoSigned(CMPSAddress, 0x1C);
+    steerSetpoints.heading = ((float)steerSetpoints.headingInt) / 10.0;
+    steerSetpoints.roll = ((float)steerSetpoints.rollInt) / 10.0;
 }
 

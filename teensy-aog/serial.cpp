@@ -17,7 +17,7 @@ void sendDataToAOG()
     SerialUSB1.print(",");
     SerialUSB1.print((int)(steerSetpoints.requestedSteerAngle * 100));
     SerialUSB1.print(",");
-    if (aogSettings.BNOInstalled)
+    if (steerConfig.BNOInstalled)
     {
         SerialUSB1.print((int)(steerSetpoints.heading * 16));
     }
@@ -25,7 +25,7 @@ void sendDataToAOG()
         SerialUSB1.print("0");
     SerialUSB1.print(",");
 
-    if (aogSettings.BNOInstalled)
+    if (steerConfig.BNOInstalled)
     {
         SerialUSB1.print((int)(steerSetpoints.roll * 16));
     }
@@ -124,69 +124,69 @@ void serialWorker()
                 checksum += reed;
                 byte sett = reed; //setting0
                 if (bitRead(sett, 0))
-                    aogSettings.InvertWAS = 1;
+                    steerConfig.InvertWAS = 1;
                 else
-                    aogSettings.InvertWAS = 0;
+                    steerConfig.InvertWAS = 0;
                 if (bitRead(sett, 1))
-                    aogSettings.InvertRoll = 1;
+                    steerConfig.InvertRoll = 1;
                 else
-                    aogSettings.InvertRoll = 0;
+                    steerConfig.InvertRoll = 0;
                 if (bitRead(sett, 2))
-                    aogSettings.MotorDriveDirection = 1;
+                    steerConfig.MotorDriveDirection = 1;
                 else
-                    aogSettings.MotorDriveDirection = 0;
+                    steerConfig.MotorDriveDirection = 0;
                 if (bitRead(sett, 3))
-                    aogSettings.SingleInputWAS = 1;
+                    steerConfig.SingleInputWAS = 1;
                 else
-                    aogSettings.SingleInputWAS = 0;
+                    steerConfig.SingleInputWAS = 0;
                 if (bitRead(sett, 4))
-                    aogSettings.CytronDriver = 1;
+                    steerConfig.CytronDriver = 1;
                 else
-                    aogSettings.CytronDriver = 0;
+                    steerConfig.CytronDriver = 0;
                 if (bitRead(sett, 5))
-                    aogSettings.SteerSwitch = 1;
+                    steerConfig.SteerSwitch = 1;
                 else
-                    aogSettings.SteerSwitch = 0;
+                    steerConfig.SteerSwitch = 0;
                 if (bitRead(sett, 6))
-                    aogSettings.UseMMA_X_Axis = 1;
+                    steerConfig.UseMMA_X_Axis = 1;
                 else
-                    aogSettings.UseMMA_X_Axis = 0;
+                    steerConfig.UseMMA_X_Axis = 0;
                 if (bitRead(sett, 7))
-                    aogSettings.ShaftEncoder = 1;
+                    steerConfig.ShaftEncoder = 1;
                 else
-                    aogSettings.ShaftEncoder = 0;
+                    steerConfig.ShaftEncoder = 0;
 
                 //set1
                 reed = SerialUSB1.read();
                 checksum += reed;
                 sett = reed; //setting1
                 if (bitRead(sett, 0))
-                    aogSettings.BNOInstalled = 1;
+                    steerConfig.BNOInstalled = 1;
                 else
-                    aogSettings.BNOInstalled = 0;
+                    steerConfig.BNOInstalled = 0;
                 if (bitRead(sett, 1))
-                    aogSettings.isRelayActiveHigh = 1;
+                    steerConfig.isRelayActiveHigh = 1;
                 else
-                    aogSettings.isRelayActiveHigh = 0;
+                    steerConfig.isRelayActiveHigh = 0;
 
                 reed = SerialUSB1.read();
                 checksum += reed;
-                aogSettings.maxSteerSpeed = reed; //actual speed
+                steerConfig.maxSteerSpeed = reed; //actual speed
 
                 reed = SerialUSB1.read();
                 checksum += reed;
-                aogSettings.minSteerSpeed = reed;
+                steerConfig.minSteerSpeed = reed;
 
                 reed = SerialUSB1.read();
                 checksum += reed;
                 byte inc = reed;
-                aogSettings.InclinometerInstalled = inc & 192;
-                aogSettings.InclinometerInstalled = aogSettings.InclinometerInstalled >> 6;
-                aogSettings.PulseCountMax = inc & 63;
+                steerConfig.InclinometerInstalled = inc & 192;
+                steerConfig.InclinometerInstalled = steerConfig.InclinometerInstalled >> 6;
+                steerConfig.PulseCountMax = inc & 63;
 
                 reed = SerialUSB1.read();
                 checksum += reed;
-                aogSettings.AckermanFix = reed;
+                steerConfig.AckermanFix = reed;
 
                 reed = SerialUSB1.read();
                 checksum += reed;
@@ -196,7 +196,7 @@ void serialWorker()
                 SerialUSB2.println(checksum, DEC);
                 SendTwoThirty((byte)checksum);
 
-                EEPROM.put(40, aogSettings);
+                EEPROM.put(40, steerConfig);
                 break;
             }
             case 0xFC:

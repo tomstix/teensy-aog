@@ -27,14 +27,14 @@ void loadSettings()
     {
         SerialUSB2.println("Settings found!");
         EEPROM.get(10, steerSettings);
-        EEPROM.get(40, aogSettings);
+        EEPROM.get(40, steerConfig);
     }
     else
     {
         Serial.println("Loading default Settings");
         EEPROM.put(0, EEP_Ident);
         EEPROM.put(10, steerSettings);
-        EEPROM.put(40, aogSettings);
+        EEPROM.put(40, steerConfig);
     }
 }
 
@@ -47,7 +47,7 @@ void setup()
 
     loadSettings();
 
-    if (aogSettings.BNOInstalled)
+    if (steerConfig.BNOInstalled)
     {
         initCMPS();
     }

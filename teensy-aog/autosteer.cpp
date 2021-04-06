@@ -10,7 +10,7 @@
 #include "gps.h"
 
 TimingData timingData;
-AOGSetup aogSettings;
+SteerConfig steerConfig;
 SteerSettings steerSettings;
 SteerSetpoints steerSetpoints;
 Switches switches;
@@ -25,7 +25,7 @@ void autosteerWorker()
         steerSetpoints.roll = ((float)map(val, 0, 1023, -300, 300)) * 0.1;
     }
 
-    if ((steerSetpoints.distanceFromLine == 32020) | (steerSetpoints.distanceFromLine == 32000) | (steerSetpoints.speed < aogSettings.minSteerSpeed) | (steerSetpoints.speed > aogSettings.maxSteerSpeed) | ((millis() - steerSetpoints.lastPacketReceived) > 500))
+    if ((steerSetpoints.distanceFromLine == 32020) | (steerSetpoints.distanceFromLine == 32000) | (steerSetpoints.speed < steerConfig.minSteerSpeed) | (steerSetpoints.speed > steerConfig.maxSteerSpeed) | ((millis() - steerSetpoints.lastPacketReceived) > 500))
     {
         if (steerSetpoints.enabled)
         {
@@ -48,9 +48,9 @@ void autosteerWorker()
         }
     }
 
-    //steerSetpoints.requestedSteerAngle = (steerSetpoints.requestedSteerAngle * aogSettings.AckermanFix + steerSetpoints.previousAngle * (100 - aogSettings.AckermanFix)) / 100.0;
+    //steerSetpoints.requestedSteerAngle = (steerSetpoints.requestedSteerAngle * steerConfig.AckermanFix + steerSetpoints.previousAngle * (100 - steerConfig.AckermanFix)) / 100.0;
 
-    switch (aogSettings.InclinometerInstalled) //using inclino Setting to set workswitch type
+    switch (steerConfig.InclinometerInstalled) //using inclino Setting to set workswitch type
     {
     case 0:
         switches.workSwitch = !steerSetpoints.enabled;

@@ -48,7 +48,7 @@ struct TimingData
 };
 extern TimingData timingData;
 
-struct AOGSetup
+struct SteerConfig
 {
 	byte InvertWAS = 0;
 	byte InvertRoll = 0;
@@ -70,7 +70,7 @@ struct AOGSetup
 	byte AckermanFix = 100;     //sent as percent
 	byte isRelayActiveHigh = 0; //if zero, active low (default)
 };
-extern AOGSetup aogSettings;
+extern SteerConfig steerConfig;
 //15 bytes
 
 struct SteerSettings

@@ -27,7 +27,7 @@ struct Metros
 	Metro checkIsobus = Metro(1);
 	Metro printStatus = Metro(1000);
 	Metro gps = Metro(10);
-	Metro serial = Metro(10);
+	Metro sendHello = Metro(200);
 	Metro resetCycle = Metro(10000);
 	Metro sendAdressClaim = Metro(1000);
 };
@@ -51,65 +51,54 @@ extern TimingData timingData;
 struct SteerConfig
 {
 	byte InvertWAS = 0;
-	byte InvertRoll = 0;
+	byte isRelayActiveHigh = 0; //if zero, active low (default)
 	byte MotorDriveDirection = 0;
 	byte SingleInputWAS = 1;
 	byte CytronDriver = 1;
 	byte SteerSwitch = 0;
-	byte UseMMA_X_Axis = 0;
 	byte ShaftEncoder = 0;
-
-	byte BNOInstalled = 1;
-	byte InclinometerInstalled = 1; // set to 0 for none
-									// set to 1 if DOGS2 Inclinometer is installed and connected to ADS pin A2
-									// set to 2 if MMA8452 installed GY-45 (1C)
-									// set to 3 if MMA8452 installed Sparkfun, Adafruit MMA8451 (1D)
-	byte maxSteerSpeed = 20;
-	byte minSteerSpeed = 0;
 	byte PulseCountMax = 5;
-	byte AckermanFix = 100;     //sent as percent
-	byte isRelayActiveHigh = 0; //if zero, active low (default)
+	byte isDanfoss = 0;     //sent as percent
 };
 extern SteerConfig steerConfig;
-//15 bytes
+//9 bytes
 
 struct SteerSettings
 {
-	float Ko = 0.0f;     //overall gain
-	float Kp = 0.0f;     //proportional gain
-	float lowPWM = 0.0f; //band of no action
-	float Kd = 0.0f;     //derivative gain
-	float steeringPositionZero = 3320.0;
-	byte minPWM = 0;
-	byte highPWM = 100; //max PWM value
-	float steerSensorCounts = 10;
-	enum class WorkswitchMode : uint8_t
-	{
-		None = 0,
-		Hitch,
-		PTO
-	} workswitchMode = WorkswitchMode::None;
+	uint8_t Kp = 40;  //proportional gain
+	uint8_t highPWM = 60;//max PWM value
+	uint8_t lowPWM = 10;  //band of no action
+	uint8_t minPWM = 9;
+	uint8_t steerSensorCounts = 1;
+	int16_t wasOffset = 0;
+	uint8_t AckermanFix = 1;     //sent as percent
 };
 extern SteerSettings steerSettings;
-//28 bytes
+//8 bytes
 
 struct SteerSetpoints
 {
 	uint16_t sections = 0;
 	uint8_t uTurn = 0;
 	uint8_t hydLift = 0;
+	uint8_t tram = 0;
 	float speed = 0;
-	int16_t distanceFromLine = 32020;
+
 	double requestedSteerAngle = 0;
 	int16_t previousAngle = 0;
 
 	bool enabled = false;
+	byte guidanceStatus = 0;
 
 	float roll = 0;
+	int16_t rollInt = 0;
 	float heading = 0;
+	int16_t headingInt = 0;
 	double actualSteerAngle = 0;
 	uint8_t switchByte = 0;
 	uint8_t pwm = 0;
+
+	bool useCMPS = true;
 
 	time_t lastPacketReceived = 0;
 };

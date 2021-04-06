@@ -11,8 +11,6 @@ MicroNMEA nmea(nmeaBuffer, sizeof(nmeaBuffer));
 
 uint8_t counter = 0;
 
-bool send = true;
-
 void gpsWorker()
 {
 		while (GPS.available())

@@ -25,7 +25,7 @@ void autosteerWorker()
         steerSetpoints.roll = ((float)map(val, 0, 1023, -300, 300)) * 0.1;
     }
 
-    if ((steerSetpoints.distanceFromLine == 32020) | (steerSetpoints.distanceFromLine == 32000) | (steerSetpoints.speed < steerConfig.minSteerSpeed) | (steerSetpoints.speed > steerConfig.maxSteerSpeed) | ((millis() - steerSetpoints.lastPacketReceived) > 500))
+    if ((!steerSetpoints.guidanceStatus | (millis() - steerSetpoints.lastPacketReceived) > 500))
     {
         if (steerSetpoints.enabled)
         {
@@ -42,15 +42,13 @@ void autosteerWorker()
         }
         else if (millis() - timingData.lastCutout > 3000) //steering has been activated by AOG - 3s to prevent automatic re-engage
         {
-            //switches.steerSwitch = 0;
+            switches.steerSwitch = 0;
             steerSetpoints.enabled = true;
             timingData.lastEnable = millis();
         }
     }
 
-    //steerSetpoints.requestedSteerAngle = (steerSetpoints.requestedSteerAngle * steerConfig.AckermanFix + steerSetpoints.previousAngle * (100 - steerConfig.AckermanFix)) / 100.0;
-
-    switch (steerConfig.InclinometerInstalled) //using inclino Setting to set workswitch type
+    switch (steerSettings.steerSensorCounts) //using inclino Setting to set workswitch type
     {
     case 0:
         switches.workSwitch = !steerSetpoints.enabled;

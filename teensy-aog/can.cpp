@@ -21,6 +21,7 @@ constexpr uint16_t j1939PgnFHS = 65094;
 constexpr uint16_t j1939PgnRPTO = 65091;
 constexpr uint16_t j1939PgnFPTO = 65092;
 
+CAN_message_t addressClaimMsg;
 CAN_message_t curveCommandMsg;
 CAN_message_t steerStateReq;
 
@@ -31,19 +32,6 @@ int16_t sendAngle = 0;
 
 void addressClaim()
 {
-	//Set up CAN Messages to send
-	CAN_message_t addressClaimMsg;
-	addressClaimMsg.flags.extended = true;
-	addressClaimMsg.id = 0x18EEFF2C;
-	addressClaimMsg.len = 8;
-	addressClaimMsg.buf[0] = 0x00;
-	addressClaimMsg.buf[1] = 0x00;
-	addressClaimMsg.buf[2] = 0xC0;
-	addressClaimMsg.buf[3] = 0x0C;
-	addressClaimMsg.buf[4] = 0x00;
-	addressClaimMsg.buf[5] = 0x17;
-	addressClaimMsg.buf[6] = 0x02;
-	addressClaimMsg.buf[7] = 0x20;
 
 	vbus.write(addressClaimMsg); //claim VBUS address 2C
 	isobus.write(addressClaimMsg);
@@ -56,28 +44,25 @@ void handleFromF0(const CAN_message_t& msg)
 {
 	vbusData.rxCounter++;
 	timingData.lastCANRx = millis();
-	//Serial.println("Message for me from F0!");
+	//SerialUSB2.println("Message for me from F0!");
 	if (msg.len == 3 && msg.buf[2] == 0)
 	{
 		SerialUSB2.println("Cutout!");
 		vbusData.cutoutCAN = 1;
 		timingData.lastCutout = millis();
 		switches.steerSwitch = 1;
-		//SerialUSB2.println(switches.steerSwitch);
 	}
 	if (msg.len == 8 && msg.buf[0] == 5 && msg.buf[1] == 10)
 	{
 		vbusData.estCurve = ((msg.buf[4] << 8) | msg.buf[5]);
-		//vbusData.estCurve = (vbusData.estCurve / 10);
 		steerSetpoints.actualSteerAngle = (double)(vbusData.estCurve / 819.0);
-		//Serial.print("Steer angle: "); Serial.println(steerSetpoints.actualSteerAngle);
 	}
 }
 
 void handleIsoFromF0(const CAN_message_t& msg)
 {
 	isobusData.rxCounterF0++;
-	//Serial.println("ISO Message from F0!");
+	//SerialUSB2.println("ISO Message from F0!");
 	if ((msg.buf[0]) == 0x0F || (msg.buf[1]) == 0x60)
 	{
 
@@ -91,7 +76,7 @@ void handleIsoFromF0(const CAN_message_t& msg)
 
 		/*else
 		{
-			Serial.println("\t Steering Failed");
+			SerialUSB2.println("\t Steering Failed");
 		}*/
 	}
 }
@@ -143,11 +128,10 @@ void checkIsobus()
 	isobus.events();
 	if (metro.checkIsobus.check() == 1)
 	{
-		//isobus.mailboxStatus();
 		if (isobus.readFIFO(rxMsg))
 		{
 			isobusData.rxCounter++;
-			//Serial.println("Isobus Message!");
+			//SerialUSB2.println("Isobus Message!");
 			pduFormat = (rxMsg.id & 0x00FF0000) >> 16;
 			if (pduFormat > 0xEF)
 			{
@@ -191,6 +175,19 @@ void checkIsobus()
 
 void initCAN()
 {
+	//Set up CAN Messages to send
+	addressClaimMsg.flags.extended = true;
+	addressClaimMsg.id = 0x18EEFF2C;
+	addressClaimMsg.len = 8;
+	addressClaimMsg.buf[0] = 0x00;
+	addressClaimMsg.buf[1] = 0x00;
+	addressClaimMsg.buf[2] = 0xC0;
+	addressClaimMsg.buf[3] = 0x0C;
+	addressClaimMsg.buf[4] = 0x00;
+	addressClaimMsg.buf[5] = 0x17;
+	addressClaimMsg.buf[6] = 0x02;
+	addressClaimMsg.buf[7] = 0x20;
+
 	curveCommandMsg.flags.extended = true;
 	curveCommandMsg.id = 0x0CEFF02C;
 	curveCommandMsg.len = 6;

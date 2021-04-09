@@ -364,3 +364,7 @@ FodyWeavers.xsd
 
 #Visual Micro Stuff
 .teensy-aog/_vm/
+
+.teesy-aog/teensy-aog.vcxproj
+.teesy-aog/teensy-aog.vcxproj.user
+.teesy-aog/teensy-aog.vcxproj.filters

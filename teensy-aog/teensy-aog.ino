@@ -41,12 +41,12 @@ void loadSettings()
 void setup()
 {
     pinMode(13, OUTPUT);
-    pinMode(11, OUTPUT);
+    pinMode(9, OUTPUT);
 
-    digitalWrite(11, HIGH);
+    digitalWrite(9, HIGH);
     digitalWrite(13, HIGH);
-    delay(2000);
-    digitalWrite(11, LOW);
+    delay(100);
+    digitalWrite(9, LOW);
     digitalWrite(13, LOW);
 
     Serial.begin(115200);

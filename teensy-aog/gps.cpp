@@ -37,10 +37,10 @@ void gpsWorker()
 	}
 }
 
-void sendNtrip(char buffer[], size_t size)
+/*void sendNtrip(char buffer[], size_t size)
 {
 	GPS.write(buffer, size);
-}
+}*/
 
 void initGPS()
 {

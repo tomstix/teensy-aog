@@ -101,6 +101,7 @@ void udpWorker()
 
 	if (packetsize)
 	{
+		digitalToggle(9);
 		udp.read(aogRxBuffer, sizeof(aogRxBuffer));
 		if (aogRxBuffer[0] == 0x80 && aogRxBuffer[1] == 0x81 && aogRxBuffer[2] == 0x7F)
 		{

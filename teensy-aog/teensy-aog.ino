@@ -7,7 +7,7 @@
 #include "teensy-aog.h"
 #include "can.h"
 #include "autosteer.h"
-#include "serial.h"
+#include "coms.h"
 #include "gps.h"
 #include "cmps.h"
 #include <EEPROM.h>
@@ -25,7 +25,7 @@ void loadSettings()
     EEPROM.get(0, EEread);
     if (EEread == EEP_Ident)
     {
-        SerialUSB2.println("Settings found!");
+        Serial.println("Settings found!");
         EEPROM.get(10, steerSettings);
         EEPROM.get(40, steerConfig);
     }
@@ -40,10 +40,16 @@ void loadSettings()
 
 void setup()
 {
-    delay(1000);
     pinMode(13, OUTPUT);
+    pinMode(11, OUTPUT);
 
-    SerialUSB2.begin(115200);
+    digitalWrite(11, HIGH);
+    digitalWrite(13, HIGH);
+    delay(2000);
+    digitalWrite(11, LOW);
+    digitalWrite(13, LOW);
+
+    Serial.begin(115200);
 
     loadSettings();
 
@@ -51,7 +57,7 @@ void setup()
 
     initCAN();
     initGPS();
-    initSerial();
+    initEthernet();
 
     delay(100);
 }
@@ -71,7 +77,7 @@ void loop()
         timingData.maxCycleTime = 0;
     }
 
-    serialWorker();
+    udpWorker();
 
     gpsWorker();
 

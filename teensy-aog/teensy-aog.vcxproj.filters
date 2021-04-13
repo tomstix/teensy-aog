@@ -39,7 +39,7 @@
     <ClInclude Include="teensy-aog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="serial.h">
+    <ClInclude Include="coms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -56,7 +56,7 @@
     <ClCompile Include="cmps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="serial.cpp">
+    <ClCompile Include="coms.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

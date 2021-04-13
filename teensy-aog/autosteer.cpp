@@ -5,7 +5,7 @@
 #include "teensy-aog.h"
 #include "autosteer.h"
 #include "can.h"
-#include "serial.h"
+#include "coms.h"
 #include "cmps.h"
 #include "gps.h"
 
@@ -48,7 +48,7 @@ void autosteerWorker()
         }
     }
 
-    switch (steerSettings.steerSensorCounts) //using inclino Setting to set workswitch type
+    switch (steerConfig.PulseCountMax) //using inclino Setting to set workswitch type
     {
     case 0:
         switches.workSwitch = !steerSetpoints.enabled;
@@ -70,7 +70,7 @@ void printStatus()
 {
     if (metro.printStatus.check() == 1)
     {
-        if (SerialUSB2.dtr())
+        if (Serial.dtr())
         {
             StaticJsonDocument<512> data;
             JsonObject candata = data.createNestedObject("CAN-Data");
@@ -103,9 +103,10 @@ void printStatus()
             general["seconds"] = gpsData.seconds;
             general["GPS Speed"] = gpsData.speed*1000;
             general["Roll"] = steerSetpoints.roll;
+            general["countsSetting"] = steerConfig.PulseCountMax;
 
-            serializeJsonPretty(data, SerialUSB2);
-            SerialUSB2.send_now();
+            serializeJsonPretty(data, Serial);
+            Serial.send_now();
         }
         isobusData.rxCounter = 0;
         isobusData.rxCounterF0 = 0;

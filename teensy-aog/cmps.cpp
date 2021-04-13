@@ -15,13 +15,13 @@ void initCMPS()
     if (Wire.requestFrom(CMPSAddress, 1) > 0)
     {
         byte reading = Wire.read();
-        SerialUSB2.print("CMPS Software Version: ");
-        SerialUSB2.println(reading);
+        Serial.print("CMPS Software Version: ");
+        Serial.println(reading);
         steerSetpoints.useCMPS = true;
     }
     else
     {
-        SerialUSB2.println("CMPS init failed!");
+        Serial.println("CMPS init failed!");
         steerSetpoints.useCMPS = false;
     }
 }

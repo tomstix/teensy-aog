@@ -36,7 +36,7 @@ void addressClaim()
 	vbus.write(addressClaimMsg); //claim VBUS address 2C
 	isobus.write(addressClaimMsg);
 
-	//SerialUSB2.println("Adress claim!");
+	//Serial.println("Adress claim!");
 }
 
 //***Interupt handlers begin
@@ -44,10 +44,10 @@ void handleFromF0(const CAN_message_t& msg)
 {
 	vbusData.rxCounter++;
 	timingData.lastCANRx = millis();
-	//SerialUSB2.println("Message for me from F0!");
+	//Serial.println("Message for me from F0!");
 	if (msg.len == 3 && msg.buf[2] == 0)
 	{
-		SerialUSB2.println("Cutout!");
+		Serial.println("Cutout!");
 		vbusData.cutoutCAN = 1;
 		timingData.lastCutout = millis();
 		switches.steerSwitch = 1;
@@ -62,13 +62,13 @@ void handleFromF0(const CAN_message_t& msg)
 void handleIsoFromF0(const CAN_message_t& msg)
 {
 	isobusData.rxCounterF0++;
-	//SerialUSB2.println("ISO Message from F0!");
+	//Serial.println("ISO Message from F0!");
 	if ((msg.buf[0]) == 0x0F || (msg.buf[1]) == 0x60)
 	{
 
 		if ((msg.buf[2]) == 0x01)
 		{
-			SerialUSB2.println("\t Steering GO!! ");
+			Serial.println("\t Steering GO!! ");
 			switches.steerSwitch = 0; //enable steerswitch
 			vbusData.cutoutCAN = 0;   //reset cutout
 			timingData.lastEnable = millis();
@@ -76,7 +76,7 @@ void handleIsoFromF0(const CAN_message_t& msg)
 
 		/*else
 		{
-			SerialUSB2.println("\t Steering Failed");
+			Serial.println("\t Steering Failed");
 		}*/
 	}
 }
@@ -131,7 +131,7 @@ void checkIsobus()
 		if (isobus.readFIFO(rxMsg))
 		{
 			isobusData.rxCounter++;
-			//SerialUSB2.println("Isobus Message!");
+			//Serial.println("Isobus Message!");
 			pduFormat = (rxMsg.id & 0x00FF0000) >> 16;
 			if (pduFormat > 0xEF)
 			{

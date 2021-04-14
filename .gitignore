@@ -372,3 +372,5 @@ FodyWeavers.xsd
 /teensy-aog/teensy-aog.vcxproj
 /teensy-aog/teensy-aog.vcxproj.user
 /teensy-aog/teensy-aog.vcxproj.filters
+
+*.sln

@@ -9,7 +9,7 @@
 #include <NativeEthernetUdp.h>
 #include <RingBuf.h>
 
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 IPAddress ip(192, 168, 137, 177);
 
 IPAddress broadcastIP(192, 168, 137, 255);
@@ -34,9 +34,9 @@ uint8_t pgn;
 uint8_t length;
 uint8_t sendbuffer[14] = { 0x80,0x81, 0x7f, 0xFD, 8, 0, 0, 0, 0, 0,0,0,0, 0xCC };
 
-const byte helloAgIO[] = { 0x80,0x81, 0x7f, 0xC7, 1, 0, 0x47 };
+const uint8_t helloAgIO[] = { 0x80,0x81, 0x7f, 0xC7, 1, 0, 0x47 };
 
-byte tempHeader = 0;
+uint8_t tempHeader = 0;
 
 bool isHeaderFound;
 bool isPGNFound;
@@ -55,11 +55,11 @@ void sendDataToAOG()
 	else
 	{
 		//heading         
-		sendbuffer[7] = (byte)9999;
+		sendbuffer[7] = (uint8_t)9999;
 		sendbuffer[8] = 9999 >> 8;
 
 		//roll
-		sendbuffer[9] = (byte)8888;
+		sendbuffer[9] = (uint8_t)8888;
 		sendbuffer[10] = 8888 >> 8;
 	}
 	steerSetpoints.switchByte = 0;
@@ -68,7 +68,7 @@ void sendDataToAOG()
 	sendbuffer[11] = steerSetpoints.switchByte;
 
 	int CK_A = 0;
-	for (byte i = 2; i < sizeof(sendbuffer) - 1; i++)
+	for (uint8_t i = 2; i < sizeof(sendbuffer) - 1; i++)
 	{
 		CK_A = (CK_A + sendbuffer[i]);
 	}
@@ -150,20 +150,21 @@ void udpWorker()
 			case 0xFB: //FB - steerConfig
 			{
 				Serial.println("Steer Config received!");
-				byte sett = aogRxBuffer[5];
+				uint8_t sett = aogRxBuffer[5];
 
 				if (bitRead(sett, 0)) steerConfig.InvertWAS = 1; else steerConfig.InvertWAS = 0;
-				if (bitRead(sett, 1)) steerConfig.isRelayActiveHigh = 1; else steerConfig.isRelayActiveHigh = 0;
+				if (bitRead(sett, 1)) steerConfig.IsRelayActiveHigh = 1; else steerConfig.IsRelayActiveHigh = 0;
 				if (bitRead(sett, 2)) steerConfig.MotorDriveDirection = 1; else steerConfig.MotorDriveDirection = 0;
 				if (bitRead(sett, 3)) steerConfig.SingleInputWAS = 1; else steerConfig.SingleInputWAS = 0;
 				if (bitRead(sett, 4)) steerConfig.CytronDriver = 1; else steerConfig.CytronDriver = 0;
 				if (bitRead(sett, 5)) steerConfig.SteerSwitch = 1; else steerConfig.SteerSwitch = 0;
-				if (bitRead(sett, 6)) steerConfig.ShaftEncoder = 1; else steerConfig.ShaftEncoder = 0;
+				if (bitRead(sett, 6)) steerConfig.SteerButton = 1; else steerConfig.SteerButton = 0;
+				if (bitRead(sett, 7)) steerConfig.ShaftEncoder = 1; else steerConfig.ShaftEncoder = 0;
 
 				steerConfig.PulseCountMax = aogRxBuffer[6];
 
 				//Danfoss type hydraulics
-				steerConfig.isDanfoss = aogRxBuffer[8]; //byte 8
+				steerConfig.IsDanfoss = aogRxBuffer[8]; //byte 8
 
 				EEPROM.put(40, steerConfig);
 				break;

@@ -14,7 +14,7 @@ void initCMPS()
 
     if (Wire.requestFrom(CMPSAddress, 1) > 0)
     {
-        byte reading = Wire.read();
+        uint8_t reading = Wire.read();
         Serial.print("CMPS Software Version: ");
         Serial.println(reading);
         steerSetpoints.useCMPS = true;
@@ -26,7 +26,7 @@ void initCMPS()
     }
 }
 
-byte readValue[27];
+uint8_t readValue[27];
 
 int requestBytes(int address, int readReg, int numBytes)
 {

@@ -6,7 +6,7 @@
 
 GPSData gpsData;
 
-byte nmeaBuffer[100];
+uint8_t nmeaBuffer[100];
 MicroNMEA nmea(nmeaBuffer, sizeof(nmeaBuffer));
 
 uint8_t counter = 0;

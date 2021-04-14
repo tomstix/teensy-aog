@@ -50,15 +50,16 @@ extern TimingData timingData;
 
 struct SteerConfig
 {
-	byte InvertWAS = 0;
-	byte isRelayActiveHigh = 0; //if zero, active low (default)
-	byte MotorDriveDirection = 0;
-	byte SingleInputWAS = 1;
-	byte CytronDriver = 1;
-	byte SteerSwitch = 0;
-	byte ShaftEncoder = 0;
-	byte PulseCountMax = 5;
-	byte isDanfoss = 0;     //sent as percent
+	uint8_t InvertWAS = 0;
+	uint8_t IsRelayActiveHigh = 0; //if zero, active low (default)
+	uint8_t MotorDriveDirection = 0;
+	uint8_t SingleInputWAS = 1;
+	uint8_t CytronDriver = 1;
+	uint8_t SteerSwitch = 0;
+	uint8_t SteerButton = 0;
+	uint8_t ShaftEncoder = 0;
+	uint8_t PulseCountMax = 5;
+	uint8_t IsDanfoss = 0;     //sent as percent
 };
 extern SteerConfig steerConfig;
 //9 bytes
@@ -107,8 +108,8 @@ extern SteerSetpoints steerSetpoints;
 
 struct Switches
 {
-	byte steerSwitch = 1;
-	byte workSwitch = 1;
+	uint8_t steerSwitch = 1;
+	uint8_t workSwitch = 1;
 };
 extern Switches switches;
 
@@ -124,7 +125,7 @@ struct VbusData
 	int16_t setCurve = 0; //Variable for Set Curve to V-Bus
 	int16_t estCurve = 0; //Variable for WAS from V-Bus
 	bool cutoutCAN = 0;   //Variable for Cutout from V-Bus
-	byte fendtCAN = 20;   //Variable for Fendt disconect from V-Bus (Not Working Yet)
+	uint8_t fendtCAN = 20;   //Variable for Fendt disconect from V-Bus (Not Working Yet)
 
 	unsigned int rxCounter = 0;
 	unsigned int txCounter = 0;

@@ -86,11 +86,6 @@ void sendNMEA(const char* nmeastring)
 	udpsend.endPacket();
 }
 
-void sendNmea(char c)
-{
-	//
-}
-
 void udpWorker()
 {
 	if (metro.sendHello.check() == 1)
@@ -189,8 +184,6 @@ void udpWorker()
 		{
 			ntripRingbuffer.push(ntripBuffer[i]);
 		}
-
-		//sendNtrip(ntripBuffer, ntripSize);
 	}
 
 	uint16_t avail = GPS.availableForWrite();

@@ -46,7 +46,7 @@ void handleFromF0(const CAN_message_t& msg)
 	//Serial.println("Message for me from F0!");
 	if (msg.len == 3 && msg.buf[2] == 0)
 	{
-		Serial.println("Cutout!");
+		//Serial.println("Cutout!");
 		vbusData.cutoutCAN = 1;
 		timingData.lastCutout = millis();
 		switches.steerSwitch = 1;
@@ -67,7 +67,7 @@ void handleIsoFromF0(const CAN_message_t& msg)
 
 		if ((msg.buf[2]) == 0x01)
 		{
-			Serial.println("\t Steering GO!! ");
+			//Serial.println("\t Steering GO!! ");
 			switches.steerSwitch = 0; //enable steerswitch
 			vbusData.cutoutCAN = 0;   //reset cutout
 			timingData.lastEnable = millis();

@@ -40,12 +40,6 @@ void autosteerWorker()
             steerSetpoints.enabled = true; //enable steering
             timingData.lastEnable = millis();
         }
-        /*else if (millis() - timingData.lastCutout > 3000) //steering has been activated by AOG - 3s to prevent automatic re-engage - doesn't work yet
-        {
-            //switches.steerSwitch = 0;
-            steerSetpoints.enabled = true;
-            timingData.lastEnable = millis();
-        }*/
     }
 
     switch (steerConfig.PulseCountMax) //using PulseCount Setting to set workswitch type

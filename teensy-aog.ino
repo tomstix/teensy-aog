@@ -4,14 +4,14 @@
  Author:	Tom Stirnkorb
 */
 
-#include "teensy-aog.h"
-#include "can.h"
-#include "autosteer.h"
-#include "coms.h"
-#include "gps.h"
-#include "cmps.h"
+#include "src/teensy-aog.h"
+#include "src/can.h"
+#include "src/autosteer.h"
+#include "src/coms.h"
+#include "src/gps.h"
+#include "src/cmps.h"
 #include <EEPROM.h>
-#define EEP_Ident 4310
+#define EEP_Ident 5004
 
 Metros metro;
 
@@ -85,6 +85,4 @@ void loop()
     checkIsobus();
 
     printStatus();
-
-    //delayMicroseconds(100);
 }

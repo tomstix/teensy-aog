@@ -37,11 +37,6 @@ void gpsWorker()
 	}
 }
 
-/*void sendNtrip(char buffer[], size_t size)
-{
-	GPS.write(buffer, size);
-}*/
-
 void initGPS()
 {
 	GPS.begin(115200);

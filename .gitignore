@@ -363,7 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 #Visual Micro Stuff
-teensy-aog/_vm/
+teensy-aog/_vm/*
 
 teensy-aog/teensy-aog.vcxproj
 teensy-aog/teensy-aog.vcxproj.user

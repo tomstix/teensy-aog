@@ -34,8 +34,7 @@ void addressClaim()
 {
 
 	vbus.write(addressClaimMsg); //claim VBUS address 2C
-	isobus.write(addressClaimMsg);
-
+	isobus.write(MB9, addressClaimMsg);
 	//Serial.println("Adress claim!");
 }
 
@@ -128,6 +127,7 @@ void checkIsobus()
 	isobus.events();
 	if (metro.checkIsobus.check() == 1)
 	{
+		//isobus.mailboxStatus();
 		if (isobus.readFIFO(rxMsg))
 		{
 			isobusData.rxCounter++;

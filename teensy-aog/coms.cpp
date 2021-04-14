@@ -62,6 +62,9 @@ void sendDataToAOG()
 		sendbuffer[9] = (byte)8888;
 		sendbuffer[10] = 8888 >> 8;
 	}
+	steerSetpoints.switchByte = 0;
+	steerSetpoints.switchByte |= (switches.steerSwitch << 1);   //put steerswitch status in bit 1 position
+	steerSetpoints.switchByte |= switches.workSwitch;
 	sendbuffer[11] = steerSetpoints.switchByte;
 
 	int CK_A = 0;

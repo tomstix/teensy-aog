@@ -40,15 +40,15 @@ void autosteerWorker()
             steerSetpoints.enabled = true; //enable steering
             timingData.lastEnable = millis();
         }
-        else if (millis() - timingData.lastCutout > 3000) //steering has been activated by AOG - 3s to prevent automatic re-engage
+        /*else if (millis() - timingData.lastCutout > 3000) //steering has been activated by AOG - 3s to prevent automatic re-engage - doesn't work yet
         {
-            switches.steerSwitch = 0;
+            //switches.steerSwitch = 0;
             steerSetpoints.enabled = true;
             timingData.lastEnable = millis();
-        }
+        }*/
     }
 
-    switch (steerConfig.PulseCountMax) //using inclino Setting to set workswitch type
+    switch (steerConfig.PulseCountMax) //using PulseCount Setting to set workswitch type
     {
     case 0:
         switches.workSwitch = !steerSetpoints.enabled;
@@ -104,8 +104,11 @@ void printStatus()
             general["GPS Speed"] = gpsData.speed*1000;
             general["Roll"] = steerSetpoints.roll;
             general["countsSetting"] = steerConfig.PulseCountMax;
+            general["steerswitch"] = switches.steerSwitch;
+            general["workswitch"] = switches.workSwitch;
 
             serializeJsonPretty(data, Serial);
+
             Serial.send_now();
         }
         isobusData.rxCounter = 0;

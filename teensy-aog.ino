@@ -11,7 +11,7 @@
 #include "src/gps.h"
 #include "src/cmps.h"
 #include <EEPROM.h>
-#define EEP_Ident 5004
+#define EEP_Ident 5005
 
 Metros metro;
 

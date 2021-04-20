@@ -48,7 +48,7 @@ void autosteerWorker()
         switches.workSwitch = !steerSetpoints.enabled;
         break;
     case 1:
-        switches.workSwitch = (isobusData.rearHitchPosition > 50);
+        switches.workSwitch = (isobusData.rearHitchPosition > (steerSettings.AckermanFix / 2));
         break;
     case 2:
         switches.workSwitch = (isobusData.rearPtoRpm < 150);
@@ -80,6 +80,7 @@ void printStatus()
             candata["GMSReset"] = isobusData.requestReset;
             candata["GMSReady"] = isobusData.steeringSystemReadiness;
             candata["GMSCurve"] = isobusData.gmsEstimatedCurvature;
+            candata["GMSAngle"] = steerSetpoints.actualSteerAngle;
             candata["VBUSCurve"] = vbusData.estCurve;
             candata["PGNrec"] = isobusData.pgn;
             candata["ISO-RX/s"] = isobusData.rxCounter;
@@ -102,8 +103,11 @@ void printStatus()
             general["workswitch"] = switches.workSwitch;
 
             serializeJsonPretty(data, Serial);
+            
 
-            Serial.send_now();
+            /*Serial.print(vbusData.estCurve);
+            Serial.print(',');
+            Serial.println(isobusData.gmsEstimatedCurvatureRaw);*/
         }
         isobusData.rxCounter = 0;
         isobusData.rxCounterF0 = 0;

@@ -17,6 +17,8 @@
 #define CMPSAddress 0x60
 #define aogVersion 17
 
+#define vbusScale 1050
+#define WHEELBASE 2.783
 #define benchmode 0
 
 #include <Metro.h>
@@ -25,7 +27,7 @@ struct Metros
 {
 	Metro sendCurveCommand = Metro(40);
 	Metro checkIsobus = Metro(1);
-	Metro printStatus = Metro(1000);
+	Metro printStatus = Metro(500);
 	Metro gps = Metro(10);
 	Metro sendHello = Metro(200);
 	Metro resetCycle = Metro(10000);
@@ -124,6 +126,7 @@ struct VbusData
 {
 	int16_t setCurve = 0; //Variable for Set Curve to V-Bus
 	int16_t estCurve = 0; //Variable for WAS from V-Bus
+	double steerAngle = 0;
 	bool cutoutCAN = 0;   //Variable for Cutout from V-Bus
 	uint8_t fendtCAN = 20;   //Variable for Fendt disconect from V-Bus (Not Working Yet)
 
@@ -144,7 +147,8 @@ struct IsobusData
 	uint16_t rearPtoRpm;
 
 	uint16_t gmsEstimatedCurvatureRaw;
-	int16_t gmsEstimatedCurvature;
+	double gmsEstimatedCurvature;
+	double gmsSteerAngle;
 	uint8_t steeringSystemReadiness;
 	uint8_t remoteswitchStatus;
 	uint8_t requestReset;

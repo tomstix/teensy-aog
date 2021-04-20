@@ -54,7 +54,7 @@ void handleFromF0(const CAN_message_t& msg)
 	if (msg.len == 8 && msg.buf[0] == 5 && msg.buf[1] == 10)
 	{
 		vbusData.estCurve = ((msg.buf[4] << 8) | msg.buf[5]);
-		steerSetpoints.actualSteerAngle = (double)(vbusData.estCurve / 819.0);
+		//steerSetpoints.actualSteerAngle = (double)(vbusData.estCurve / (double)vbusScale);
 	}
 }
 
@@ -92,7 +92,7 @@ void sendCurveCommand()
 	{
 		if (steerSetpoints.enabled)
 		{
-			sendAngle = (int16_t)(steerSetpoints.requestedSteerAngle * 819);
+			sendAngle = (int16_t)(steerSetpoints.requestedSteerAngle * vbusScale);
 			if ((sendAngle - steerSetpoints.previousAngle) > 1500)
 			{
 				sendAngle = steerSetpoints.previousAngle + 1500;
@@ -109,7 +109,7 @@ void sendCurveCommand()
 		else
 		{
 			vbusData.setCurve = vbusData.estCurve;
-			steerSetpoints.previousAngle = (int16_t)(vbusData.estCurve * 819);
+			steerSetpoints.previousAngle = (int16_t)(vbusData.estCurve * vbusScale);
 			curveCommandMsg.buf[2] = 2;
 		}
 		curveCommandMsg.buf[4] = highByte(sendAngle);
@@ -164,7 +164,8 @@ void checkIsobus()
 				break;
 			case 0xAC00:
 				isobusData.gmsEstimatedCurvatureRaw = (rxMsg.buf[1] << 8 | rxMsg.buf[0]);
-				isobusData.gmsEstimatedCurvature = isobusData.gmsEstimatedCurvatureRaw / 4 - 8032;
+				isobusData.gmsEstimatedCurvature = ((double)isobusData.gmsEstimatedCurvatureRaw / 4.0) - 8032;
+				steerSetpoints.actualSteerAngle = atan(WHEELBASE * isobusData.gmsEstimatedCurvature / 1000.0) * 180/PI;
 				isobusData.requestReset = (rxMsg.buf[2] & 0b11000000) >> 6;
 				isobusData.steeringSystemReadiness = (rxMsg.buf[2] & 0b1100 >> 2);
 				break;

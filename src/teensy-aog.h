@@ -13,11 +13,10 @@
 #endif
 
 #define GPS Serial3
-#define PRINT_DATA 1
 #define CMPSAddress 0x60
-#define aogVersion 17
 
-#define vbusScale 1050
+#define vbusScaleLeft 897
+#define vbusScaleRight 1039
 #define WHEELBASE 2.783
 #define benchmode 0
 

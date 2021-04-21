@@ -28,6 +28,7 @@ CAN_message_t steerStateReq;
 VbusData vbusData;
 IsobusData isobusData;
 
+uint16_t vbusScale;
 int16_t sendAngle = 0;
 
 void addressClaim()
@@ -92,8 +93,16 @@ void sendCurveCommand()
 	{
 		if (steerSetpoints.enabled)
 		{
+			if (steerSetpoints.requestedSteerAngle > 0)					//use different scale factors for left/right steering
+			{
+				vbusScale = vbusScaleRight;
+			}
+			else
+			{
+				vbusScale = vbusScaleLeft;
+			}
 			sendAngle = (int16_t)(steerSetpoints.requestedSteerAngle * vbusScale);
-			if ((sendAngle - steerSetpoints.previousAngle) > 1500)
+			if ((sendAngle - steerSetpoints.previousAngle) > 1500)		//limit steering speed a little bit
 			{
 				sendAngle = steerSetpoints.previousAngle + 1500;
 			}

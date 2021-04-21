@@ -1,5 +1,5 @@
-#ifndef _UDP_h
-#define _UDP_h
+#ifndef _COMS_h
+#define _COMS_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "arduino.h"

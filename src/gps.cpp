@@ -2,6 +2,7 @@
 #include "cmps.h"
 #include "teensy-aog.h"
 #include "coms.h"
+#include "autosteer.h"
 #include <MicroNMEA.h>
 
 GPSData gpsData;
@@ -24,10 +25,7 @@ void gpsWorker()
 				gpsData.speed = nmea.getSpeed();
 				gpsData.seconds = nmea.getSecond();
 				sendNMEA(nmea.getSentence());
-				if (steerSetpoints.useCMPS)
-				{
-					cmpsWorker();
-				}
+				autosteerWorker();
 				digitalToggle(13);
 			}
 			else if (id == "VTG") {

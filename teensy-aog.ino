@@ -15,6 +15,12 @@
 
 Metros metro;
 
+TimingData timingData;
+SteerConfig steerConfig;
+SteerSettings steerSettings;
+SteerSetpoints steerSetpoints;
+Switches switches;
+
 uint32_t cycleTimer = 0;
 
 
@@ -80,6 +86,8 @@ void loop()
     udpWorker();
 
     gpsWorker();
+
+    cmpsWorker();
 
     sendCurveCommand();
     checkIsobus();

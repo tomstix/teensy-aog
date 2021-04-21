@@ -28,6 +28,7 @@ struct Metros
 	Metro checkIsobus = Metro(1);
 	Metro printStatus = Metro(500);
 	Metro gps = Metro(10);
+	Metro imu = Metro(5);
 	Metro sendHello = Metro(200);
 	Metro resetCycle = Metro(10000);
 	Metro sendAdressClaim = Metro(1000);

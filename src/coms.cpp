@@ -115,7 +115,7 @@ void udpWorker()
 				steerSetpoints.sections = aogRxBuffer[11] << 8 | aogRxBuffer[12];
 
 				steerSetpoints.lastPacketReceived = millis();
-				autosteerWorker();
+				//autosteerWorker();
 				break;
 			}
 

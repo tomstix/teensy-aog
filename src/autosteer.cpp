@@ -2,18 +2,12 @@
 // 
 // 
 #include <ArduinoJson.h>
+
 #include "teensy-aog.h"
 #include "autosteer.h"
-#include "can.h"
 #include "coms.h"
 #include "cmps.h"
 #include "gps.h"
-
-TimingData timingData;
-SteerConfig steerConfig;
-SteerSettings steerSettings;
-SteerSetpoints steerSetpoints;
-Switches switches;
 
 void autosteerWorker()
 {
@@ -48,7 +42,7 @@ void autosteerWorker()
         switches.workSwitch = !steerSetpoints.enabled;
         break;
     case 1:
-        switches.workSwitch = (isobusData.rearHitchPosition > (steerSettings.AckermanFix / 2));
+        switches.workSwitch = (isobusData.rearHitchPosition * 100 / 255 > (steerSettings.AckermanFix / 2));
         break;
     case 2:
         switches.workSwitch = (isobusData.rearPtoRpm < 150);

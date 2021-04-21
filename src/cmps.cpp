@@ -5,8 +5,12 @@
 #include "cmps.h"
 
 #include <Wire.h>
+#include <SimpleKalmanFilter.h>
 
 #include "teensy-aog.h"
+
+SimpleKalmanFilter rollFilter(1, 1, 0.1);
+SimpleKalmanFilter headingFilter(1, 1, 0.1);
 
 void initCMPS()
 {
@@ -63,9 +67,14 @@ int16_t requestTwoSigned(int address, int readReg)
 
 void cmpsWorker()
 {
-    steerSetpoints.headingInt = requestBytes(CMPSAddress, 0x02, 2);
-    steerSetpoints.rollInt = requestTwoSigned(CMPSAddress, 0x1C);
-    steerSetpoints.heading = ((float)steerSetpoints.headingInt) / 10.0;
-    steerSetpoints.roll = ((float)steerSetpoints.rollInt) / 10.0;
+    if (metro.imu.check() == 1) 
+    {
+        int16_t headingInt = requestBytes(CMPSAddress, 0x02, 2);
+        int16_t rollInt = requestTwoSigned(CMPSAddress, 0x1C);
+        steerSetpoints.headingInt = headingFilter.updateEstimate(headingInt);
+        steerSetpoints.rollInt = rollFilter.updateEstimate(rollInt);
+        steerSetpoints.heading = ((float)steerSetpoints.headingInt) / 10.0;
+        steerSetpoints.roll = ((float)steerSetpoints.rollInt) / 10.0;
+    }
 }
 

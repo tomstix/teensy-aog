@@ -1,6 +1,5 @@
 #include <ArduinoJson.h>
 
-#include "main.h"
 #include "autosteer.h"
 #include "coms.h"
 #include "cmps.h"
@@ -64,12 +63,9 @@ void printStatus()
             candata["mRPM"] = isobusData.motorRpm;
             candata["WhlSpeed"] = isobusData.speed;
             candata["rHitch"] = isobusData.rearHitchPosition;
-            candata["rHitchWork"] = isobusData.rearHitchWorking;
             candata["fHitch"] = isobusData.frontHitchPosition;
             candata["rPTO"] = isobusData.rearPtoRpm;
             candata["fPTO"] = isobusData.frontPtoRpm;
-            candata["GMSReset"] = isobusData.requestReset;
-            candata["GMSReady"] = isobusData.steeringSystemReadiness;
             candata["GMSCurve"] = isobusData.gmsEstimatedCurvature;
             candata["GMSAngle"] = steerSetpoints.actualSteerAngle;
             candata["VBUSCurve"] = vbusData.estCurve;
@@ -89,9 +85,9 @@ void printStatus()
             general["seconds"] = gpsData.seconds;
             general["GPS Speed"] = gpsData.speed*1000;
             general["Roll"] = steerSetpoints.roll;
-            general["countsSetting"] = steerConfig.PulseCountMax;
             general["steerswitch"] = switches.steerSwitch;
             general["workswitch"] = switches.workSwitch;
+            general["countsSetting"] = steerConfig.PulseCountMax;
 
             serializeJsonPretty(data, Serial);
             

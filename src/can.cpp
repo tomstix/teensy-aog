@@ -18,6 +18,7 @@ constexpr uint16_t j1939PgnPHS = 65093;
 constexpr uint16_t j1939PgnFHS = 65094;
 constexpr uint16_t j1939PgnRPTO = 65091;
 constexpr uint16_t j1939PgnFPTO = 65092;
+constexpr uint16_t isoPgnGms = 0xAC00;
 
 CAN_message_t addressClaimMsg;
 CAN_message_t curveCommandMsg;
@@ -107,14 +108,15 @@ void sendCurveCommand()
 					steerSetpoints.requestedSteerAngle = -35.0;
 				}
 			}
+			int16_t angleRate = steerSettings.Kp * 8;						//use Kp Setting to limit steering Speed
 			sendAngle = (int16_t)(steerSetpoints.requestedSteerAngle * vbusScale);
-			if ((sendAngle - steerSetpoints.previousAngle) > 1500)		//limit steering speed a little bit
+			if ((sendAngle - steerSetpoints.previousAngle) > angleRate)		//limit steering speed a little bit
 			{
-				sendAngle = steerSetpoints.previousAngle + 1500;
+				sendAngle = steerSetpoints.previousAngle + angleRate;
 			}
-			else if ((sendAngle - steerSetpoints.previousAngle < -1500))
+			else if ((sendAngle - steerSetpoints.previousAngle < -angleRate))
 			{
-				sendAngle = steerSetpoints.previousAngle - 1500;
+				sendAngle = steerSetpoints.previousAngle - angleRate;
 			}
 			vbusData.setCurve = sendAngle;
 			curveCommandMsg.buf[2] = 3;
@@ -142,11 +144,10 @@ void checkIsobus()
 	isobus.events();
 	if (metro.checkIsobus.check() == 1)
 	{
-		//isobus.mailboxStatus();
 		if (isobus.readFIFO(rxMsg))
 		{
 			isobusData.rxCounter++;
-			//Serial.println("Isobus Message!");
+
 			pduFormat = (rxMsg.id & 0x00FF0000) >> 16;
 			if (pduFormat > 0xEF)
 			{
@@ -156,6 +157,8 @@ void checkIsobus()
 			{
 				isobusData.pgn = (rxMsg.id & 0x00FF0000) >> 8;
 			}
+
+
 			switch (isobusData.pgn)
 			{
 			case j1939PgnEEC1:
@@ -166,7 +169,6 @@ void checkIsobus()
 				break;
 			case j1939PgnPHS:
 				isobusData.rearHitchPosition = rxMsg.buf[0];
-				isobusData.rearHitchWorking = rxMsg.buf[1] & 0b00000011;
 				break;
 			case j1939PgnFHS:
 				isobusData.frontHitchPosition = rxMsg.buf[0];
@@ -177,12 +179,10 @@ void checkIsobus()
 			case j1939PgnFPTO:
 				isobusData.frontPtoRpm = (rxMsg.buf[1] << 8 | rxMsg.buf[0]) / 8;
 				break;
-			case 0xAC00:
+			case isoPgnGms:
 				isobusData.gmsEstimatedCurvatureRaw = (rxMsg.buf[1] << 8 | rxMsg.buf[0]);
 				isobusData.gmsEstimatedCurvature = ((double)isobusData.gmsEstimatedCurvatureRaw / 4.0) - 8032;
 				steerSetpoints.actualSteerAngle = atan(WHEELBASE * isobusData.gmsEstimatedCurvature / 1000.0) * 180/PI;
-				isobusData.requestReset = (rxMsg.buf[2] & 0b11000000) >> 6;
-				isobusData.steeringSystemReadiness = (rxMsg.buf[2] & 0b1100 >> 2);
 				break;
 			}
 		}
@@ -253,7 +253,4 @@ void initCAN()
 	//isobus.mailboxStatus();
 
 	addressClaim();
-
-	steerSetpoints.switchByte = 0;
-
 }

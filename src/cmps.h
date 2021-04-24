@@ -1,16 +1,6 @@
-// cmps.h
+#pragma once
 
-#ifndef _CMPS_h
-#define _CMPS_h
-
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "arduino.h"
-#else
-	#include "WProgram.h"
-#endif
-
-
-#endif
+#include "main.h"
 
 void initCMPS();
 void cmpsWorker();

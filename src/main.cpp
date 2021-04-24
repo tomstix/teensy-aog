@@ -1,15 +1,10 @@
-/*
- Name:		teensy_aog.ino
- Created:	10.03.2021 11:27:03
- Author:	Tom Stirnkorb
-*/
+#include "main.h"
+#include "can.h"
+#include "autosteer.h"
+#include "coms.h"
+#include "gps.h"
+#include "cmps.h"
 
-#include "src/teensy-aog.h"
-#include "src/can.h"
-#include "src/autosteer.h"
-#include "src/coms.h"
-#include "src/gps.h"
-#include "src/cmps.h"
 #include <EEPROM.h>
 #define EEP_Ident 5005
 

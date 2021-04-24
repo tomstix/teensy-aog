@@ -1,16 +1,6 @@
-// autosteer.h
+#pragma once
 
-#ifndef _AUTOSTEER_h
-#define _AUTOSTEER_h
-
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "arduino.h"
-#else
-	#include "WProgram.h"
-#endif
-
-
-#endif
+#include "main.h"
 
 void autosteerWorker();
 void printStatus();

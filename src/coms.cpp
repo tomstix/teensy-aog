@@ -1,6 +1,5 @@
 #include "coms.h"
 
-#include "teensy-aog.h"
 #include "autosteer.h"
 #include "gps.h"
 

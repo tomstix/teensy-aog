@@ -1,9 +1,6 @@
-// 
-// 
-// 
 #include <ArduinoJson.h>
 
-#include "teensy-aog.h"
+#include "main.h"
 #include "autosteer.h"
 #include "coms.h"
 #include "cmps.h"

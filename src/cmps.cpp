@@ -1,13 +1,7 @@
-// 
-// 
-// 
-
 #include "cmps.h"
 
 #include <Wire.h>
 #include <SimpleKalmanFilter.h>
-
-#include "teensy-aog.h"
 
 SimpleKalmanFilter rollFilter(1, 1, 0.1);
 SimpleKalmanFilter headingFilter(1, 1, 0.1);

@@ -1,8 +1,8 @@
 #include "gps.h"
 #include "cmps.h"
-#include "teensy-aog.h"
 #include "coms.h"
 #include "autosteer.h"
+
 #include <MicroNMEA.h>
 
 GPSData gpsData;

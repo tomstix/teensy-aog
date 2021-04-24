@@ -96,10 +96,18 @@ void sendCurveCommand()
 			if (steerSetpoints.requestedSteerAngle > 0)					//use different scale factors for left/right steering
 			{
 				vbusScale = vbusScaleRight;
+				if (steerSetpoints.requestedSteerAngle > 31.5)			//avoid variable overflow when reaching max steer angle
+				{
+					steerSetpoints.requestedSteerAngle = 31.5;
+				}
 			}
 			else
 			{
 				vbusScale = vbusScaleLeft;
+				if (steerSetpoints.requestedSteerAngle < -35.0)
+				{
+					steerSetpoints.requestedSteerAngle = -35.0;
+				}
 			}
 			sendAngle = (int16_t)(steerSetpoints.requestedSteerAngle * vbusScale);
 			if ((sendAngle - steerSetpoints.previousAngle) > 1500)		//limit steering speed a little bit
@@ -166,10 +174,10 @@ void checkIsobus()
 				isobusData.frontHitchPosition = rxMsg.buf[0];
 				break;
 			case j1939PgnRPTO:
-				isobusData.rearPtoRpm = rxMsg.buf[1] << 8 | rxMsg.buf[0];
+				isobusData.rearPtoRpm = (rxMsg.buf[1] << 8 | rxMsg.buf[0]) / 8;
 				break;
 			case j1939PgnFPTO:
-				isobusData.frontPtoRpm = rxMsg.buf[1] << 8 | rxMsg.buf[0];
+				isobusData.frontPtoRpm = (rxMsg.buf[1] << 8 | rxMsg.buf[0]) / 8;
 				break;
 			case 0xAC00:
 				isobusData.gmsEstimatedCurvatureRaw = (rxMsg.buf[1] << 8 | rxMsg.buf[0]);

@@ -20,7 +20,10 @@
 #define WHEELBASE 2.783
 #define benchmode 0
 
+
 #include <Metro.h>
+
+const uint16_t ptoTreshold = 200;
 
 struct Metros
 {
@@ -60,7 +63,7 @@ struct SteerConfig
 	uint8_t SteerSwitch = 0;
 	uint8_t SteerButton = 0;
 	uint8_t ShaftEncoder = 0;
-	uint8_t PulseCountMax = 5;
+	uint8_t PulseCountMax = 1;
 	uint8_t IsDanfoss = 0;     //sent as percent
 };
 extern SteerConfig steerConfig;

@@ -45,7 +45,7 @@ void autosteerWorker()
         switches.workSwitch = (isobusData.rearHitchPosition * 100 / 255 > (steerSettings.AckermanFix / 2));
         break;
     case 2:
-        switches.workSwitch = (isobusData.rearPtoRpm < 150);
+        switches.workSwitch = (isobusData.rearPtoRpm < ptoTreshold);
         break;
     default:
         break;

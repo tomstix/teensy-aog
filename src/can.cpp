@@ -4,9 +4,11 @@
 
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> vbus;
 FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> isobus;
-//FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> kbus;
+FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> kbus;
 
 CAN_message_t rxMsg;
+
+CAN_message_t goEnd;
 
 uint8_t pduFormat;
 constexpr uint16_t j1939PgnEEC1 = 61444;
@@ -138,6 +140,7 @@ void sendCurveCommand()
 
 void checkIsobus()
 {
+	kbus.events();
 	isobus.events();
 	if (metro.checkIsobus.check() == 1)
 	{
@@ -186,6 +189,32 @@ void checkIsobus()
 	}
 }
 
+void sendGoEnd()
+{
+	if(steerSetpoints.hydLift == 0) return;
+
+	if(steerSetpoints.hydLift == 1)	//hydraulics down -> GO
+	{
+		goEnd.buf[1] = 0x20;
+		goEnd.buf[4] = 0x80;
+		goEnd.buf[5] = 0x01;
+		kbus.write(goEnd);		//press
+		goEnd.buf[4] = 0x00;
+		goEnd.buf[5] = 0x02;
+		kbus.write(goEnd);		//release
+	}
+	else if(steerSetpoints.hydLift == 2) //hydLift up -> END
+	{
+		goEnd.buf[1] = 0x21;
+		goEnd.buf[4] = 0x80;
+		goEnd.buf[5] = 0x01;
+		kbus.write(goEnd);		//press
+		goEnd.buf[4] = 0x00;
+		goEnd.buf[5] = 0x02;
+		kbus.write(goEnd);		//release
+	}
+}
+
 void initCAN()
 {
 	//Set up CAN Messages to send
@@ -216,6 +245,20 @@ void initCAN()
 	steerStateReq.len = 2;
 	steerStateReq.buf[0] = 0x5;
 	steerStateReq.buf[1] = 0x19;
+
+	goEnd.id = 0x613;
+	goEnd.flags.extended = false;
+	goEnd.len = 8;
+	goEnd.buf[0] = 0x15;
+	goEnd.buf[1] = 0x20;
+	goEnd.buf[2] = 0x06;
+	goEnd.buf[3] = 0xCA;
+	goEnd.buf[4] = 0x80;
+	goEnd.buf[5] = 0x01;
+	goEnd.buf[6] = 0x00;
+	goEnd.buf[7] = 0x00;
+	goEnd.seq = 1;
+
 
 	vbus.begin();
 	vbus.setBaudRate(250000);
@@ -248,6 +291,12 @@ void initCAN()
 	isobus.enableMBInterrupt(MB8);
 	isobus.onReceive(MB8, handleIsoFromF0);
 	//isobus.mailboxStatus();
+
+	kbus.begin();
+	kbus.setBaudRate(250000);
+	kbus.setMaxMB(2);
+	kbus.setMB(MB0,TX,STD);
+	kbus.setMBFilter(REJECT_ALL);
 
 	addressClaim();
 }

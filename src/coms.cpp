@@ -2,6 +2,7 @@
 
 #include "autosteer.h"
 #include "gps.h"
+#include "can.h"
 
 #include <EEPROM.h>
 #include <NativeEthernet.h>
@@ -110,12 +111,27 @@ void udpWorker()
 				steerSetpoints.speed = ((float)(aogRxBuffer[5] | aogRxBuffer[5] << 8)) * 0.1;
 				steerSetpoints.guidanceStatus = aogRxBuffer[7];
 				steerSetpoints.requestedSteerAngle = (float)((int16_t)(aogRxBuffer[8] | aogRxBuffer[9] << 8)) * 0.01;
-				steerSetpoints.tram = aogRxBuffer[10];
+				//steerSetpoints.tram = aogRxBuffer[10];
 				steerSetpoints.sections = aogRxBuffer[11] << 8 | aogRxBuffer[12];
 
 				steerSetpoints.lastPacketReceived = millis();
 				//autosteerWorker();
 				break;
+			}
+
+			case 0xEF:
+			{
+				steerSetpoints.uTurn = aogRxBuffer[5];
+				steerSetpoints.tree = aogRxBuffer[6];
+				steerSetpoints.hydLift = aogRxBuffer[7];
+
+				if(steerSetpoints.hydLift != steerSetpoints.hydLiftPrev)
+				{
+					sendGoEnd();
+					steerSetpoints.hydLiftPrev = steerSetpoints.hydLift;
+				}
+
+				steerSetpoints.tram = aogRxBuffer[8];
 			}
 
 			case 0xFC:

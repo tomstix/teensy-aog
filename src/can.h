@@ -2,6 +2,7 @@
 
 #include "main.h"
 
+void sendGoEnd();
 void initCAN();
 void checkIsobus();
 void sendCurveCommand();

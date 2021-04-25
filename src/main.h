@@ -77,7 +77,9 @@ struct SteerSetpoints
 	uint16_t sections = 0;
 	uint8_t uTurn = 0;
 	uint8_t hydLift = 0;
+	uint8_t hydLiftPrev = 0;
 	uint8_t tram = 0;
+	uint8_t tree = 0;
 	float speed = 0;
 
 	double requestedSteerAngle = 0;

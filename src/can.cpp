@@ -1,5 +1,3 @@
-// 
-// 
 #include <FlexCAN_T4.h>
 #include "can.h"
 
@@ -7,7 +5,6 @@
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> vbus;
 FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> isobus;
 //FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> kbus;
-
 
 CAN_message_t rxMsg;
 
@@ -108,7 +105,7 @@ void sendCurveCommand()
 					steerSetpoints.requestedSteerAngle = -35.0;
 				}
 			}
-			int16_t angleRate = steerSettings.Kp * 8;						//use Kp Setting to limit steering Speed
+			int16_t angleRate = steerSettings.Kp * 16;						//use Kp Setting to limit steering Speed
 			sendAngle = (int16_t)(steerSetpoints.requestedSteerAngle * vbusScale);
 			if ((sendAngle - steerSetpoints.previousAngle) > angleRate)		//limit steering speed a little bit
 			{

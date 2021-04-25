@@ -3,8 +3,7 @@
 #include <Wire.h>
 #include <SimpleKalmanFilter.h>
 
-SimpleKalmanFilter rollFilter(1, 1, 0.1);
-SimpleKalmanFilter headingFilter(1, 1, 0.1);
+SimpleKalmanFilter rollFilter(0.5, 0.5, 0.01);
 
 void initCMPS()
 {
@@ -65,7 +64,7 @@ void cmpsWorker()
     {
         int16_t headingInt = requestBytes(CMPSAddress, 0x02, 2);
         int16_t rollInt = requestTwoSigned(CMPSAddress, 0x1C);
-        steerSetpoints.headingInt = headingFilter.updateEstimate(headingInt);
+        steerSetpoints.headingInt = headingInt;
         steerSetpoints.rollInt = rollFilter.updateEstimate(rollInt);
         steerSetpoints.heading = ((float)steerSetpoints.headingInt) / 10.0;
         steerSetpoints.roll = ((float)steerSetpoints.rollInt) / 10.0;

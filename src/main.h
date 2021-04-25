@@ -57,7 +57,7 @@ struct SteerConfig
 	uint8_t IsDanfoss = 0;     //sent as percent
 };
 extern SteerConfig steerConfig;
-//9 bytes
+//10 bytes
 
 struct SteerSettings
 {
@@ -121,7 +121,6 @@ struct VbusData
 	int16_t estCurve = 0; //Variable for WAS from V-Bus
 	double steerAngle = 0;
 	bool cutoutCAN = 0;   //Variable for Cutout from V-Bus
-	uint8_t fendtCAN = 20;   //Variable for Fendt disconect from V-Bus (Not Working Yet)
 
 	unsigned int rxCounter = 0;
 	unsigned int txCounter = 0;
@@ -142,9 +141,6 @@ struct IsobusData
 	uint16_t gmsEstimatedCurvatureRaw;
 	double gmsEstimatedCurvature;
 	double gmsSteerAngle;
-	uint8_t steeringSystemReadiness;
-	uint8_t remoteswitchStatus;
-	uint8_t requestReset;
 
 	unsigned int rxCounter = 0;
 	unsigned int rxCounterF0 = 0;

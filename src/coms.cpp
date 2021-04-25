@@ -176,7 +176,7 @@ void udpWorker()
 		}
 	}
 
-	int ntripSize = ntripUdp.parsePacket();
+	int ntripSize = ntripUdp.parsePacket();					//read NTRIP
 	if (ntripSize)
 	{
 		ntripUdp.read(ntripBuffer, sizeof(ntripBuffer));
@@ -186,7 +186,7 @@ void udpWorker()
 		}
 	}
 
-	uint16_t avail = GPS.availableForWrite();
+	uint16_t avail = GPS.availableForWrite();				//only write as many bytes to GPS as are immediately available
 	uint8_t c = 0;
 	for (int i = 0; i < avail; i++)
 	{

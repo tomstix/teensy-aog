@@ -132,6 +132,7 @@ void udpWorker()
 				}
 
 				steerSetpoints.tram = aogRxBuffer[8];
+				break;
 			}
 
 			case 0xFC:
@@ -152,7 +153,7 @@ void udpWorker()
 
 				steerSettings.wasOffset |= (aogRxBuffer[11] << 8);  //read was zero offset Lo
 
-				steerSettings.AckermanFix = (float)aogRxBuffer[12] * 0.01;
+				steerSettings.AckermanFix = aogRxBuffer[12];
 
 				//store in EEPROM
 				EEPROM.put(10, steerSettings);

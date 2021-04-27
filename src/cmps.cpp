@@ -70,4 +70,3 @@ void cmpsWorker()
         steerSetpoints.roll = ((float)steerSetpoints.rollInt) / 10.0;
     }
 }
-

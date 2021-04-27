@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <Metro.h>
 
 #define GPS Serial3
 #define CMPSAddress 0x60
@@ -10,16 +11,13 @@
 #define WHEELBASE 2.783
 #define benchmode 0
 
-
-#include <Metro.h>
-
-const uint16_t ptoTreshold = 200;
+const uint16_t ptoTreshold = 300;
 
 struct Metros
 {
 	Metro sendCurveCommand = Metro(40);
 	Metro checkIsobus = Metro(1);
-	Metro printStatus = Metro(500);
+	Metro printStatus = Metro(1000);
 	Metro gps = Metro(10);
 	Metro imu = Metro(5);
 	Metro sendHello = Metro(200);
@@ -61,13 +59,13 @@ extern SteerConfig steerConfig;
 
 struct SteerSettings
 {
-	uint8_t Kp = 40;  //proportional gain
+	uint8_t Kp = 100;  //proportional gain
 	uint8_t highPWM = 60;//max PWM value
 	uint8_t lowPWM = 10;  //band of no action
 	uint8_t minPWM = 9;
 	uint8_t steerSensorCounts = 1;
 	int16_t wasOffset = 0;
-	uint8_t AckermanFix = 1;     //sent as percent
+	uint8_t AckermanFix = 80;     //sent as percent
 };
 extern SteerSettings steerSettings;
 //8 bytes

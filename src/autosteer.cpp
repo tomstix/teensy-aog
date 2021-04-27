@@ -25,8 +25,8 @@ void autosteerWorker()
     }
     else //valid conditions to turn on autosteer
     {
-        if (!switches.steerSwitch)
-        {                                  //steering has been activated by steerSwtich
+        if (!switches.steerSwitch || (millis() - timingData.lastCutout > 3000))
+        {
             steerSetpoints.enabled = true; //enable steering
             timingData.lastEnable = millis();
         }
@@ -34,15 +34,14 @@ void autosteerWorker()
 
     switch (steerConfig.PulseCountMax) //using PulseCount Setting to set workswitch type
     {
-    case 0:
-        switches.workSwitch = !steerSetpoints.enabled;
-        break;
     case 1:
         switches.workSwitch = (isobusData.rearHitchPosition * 100 / 255 > (steerSettings.AckermanFix / 2));
         break;
     case 2:
         switches.workSwitch = (isobusData.rearPtoRpm < ptoTreshold);
         break;
+    case 3:
+        switches.workSwitch = !steerSetpoints.enabled;
     default:
         break;
     }
@@ -56,9 +55,10 @@ void printStatus()
     {
         if (Serial.dtr())
         {
-            StaticJsonDocument<512> data;
+            StaticJsonDocument<1024> data;
             JsonObject candata = data.createNestedObject("CAN-Data");
             JsonObject general = data.createNestedObject("General");
+            JsonObject settings = data.createNestedObject("Settings");
 
             candata["mRPM"] = isobusData.motorRpm;
             candata["WhlSpeed"] = isobusData.speed;
@@ -76,7 +76,8 @@ void printStatus()
             candata["V-TX/s"] = vbusData.txCounter;
             candata["setcurve"] = vbusData.setCurve;
 
-
+            general["Enabled"] = steerSetpoints.enabled;
+            general["Guidance Status"] = steerSetpoints.guidanceStatus;
             general["requestAngle"] = steerSetpoints.requestedSteerAngle;
             general["cycletime"] = timingData.cycleTime;
             general["maxcycle"] = timingData.maxCycleTime;
@@ -87,7 +88,11 @@ void printStatus()
             general["Roll"] = steerSetpoints.roll;
             general["steerswitch"] = switches.steerSwitch;
             general["workswitch"] = switches.workSwitch;
-            general["countsSetting"] = steerConfig.PulseCountMax;
+            general["HydLift"] = steerSetpoints.hydLift;
+
+            settings["pulseCountsSetting"] = steerConfig.PulseCountMax;
+            settings["Kp"] = steerSettings.Kp;
+            settings["Ackermann"] = steerSettings.AckermanFix;
 
             serializeJsonPretty(data, Serial);
             

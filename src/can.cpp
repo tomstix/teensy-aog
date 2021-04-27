@@ -195,6 +195,7 @@ void sendGoEnd()
 
 	if(steerSetpoints.hydLift == 1)	//hydraulics down -> GO
 	{
+		Serial.println("Sending GO!");
 		goEnd.buf[1] = 0x20;
 		goEnd.buf[4] = 0x80;
 		goEnd.buf[5] = 0x01;
@@ -205,6 +206,7 @@ void sendGoEnd()
 	}
 	else if(steerSetpoints.hydLift == 2) //hydLift up -> END
 	{
+		Serial.println("Sending END!");
 		goEnd.buf[1] = 0x21;
 		goEnd.buf[4] = 0x80;
 		goEnd.buf[5] = 0x01;

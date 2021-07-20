@@ -4,9 +4,16 @@
 #include "gps.h"
 #include "can.h"
 
-#include <EEPROM.h>
+#ifdef ARDUINO_TEENSY41
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
+#else
+#include <SPI.h>
+#include <Ethernet.h>
+#include <EthernetUdp.h>
+#endif
+
+#include <EEPROM.h>
 #include <RingBuf.h>
 
 uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -46,7 +53,7 @@ void sendDataToAOG()
 	int16_t steerAngle = (int16_t)(steerSetpoints.actualSteerAngle * 100);
 	sendbuffer[5] = (uint8_t)steerAngle;
 	sendbuffer[6] = steerAngle >> 8;
-	if (steerSetpoints.useCMPS) {
+	if (steerConfig.imuType != SteerConfig::ImuType::None) {
 		sendbuffer[8] = steerSetpoints.headingInt >> 8;
 		sendbuffer[7] = steerSetpoints.headingInt;
 		sendbuffer[10] = steerSetpoints.rollInt >> 8;
@@ -179,8 +186,11 @@ void udpWorker()
 
 				steerConfig.PulseCountMax = aogRxBuffer[6];
 
-				//Danfoss type hydraulics
-				steerConfig.IsDanfoss = aogRxBuffer[8]; //byte 8
+				sett = aogRxBuffer[8]; //setting1 - Danfoss valve etc
+      
+				if (bitRead(sett, 0)) steerConfig.IsDanfoss = 1; else steerConfig.IsDanfoss = 0;
+				if (bitRead(sett, 1)) steerConfig.PressureSensor = 1; else steerConfig.PressureSensor = 0;
+				if (bitRead(sett, 2)) steerConfig.CurrentSensor = 1; else steerConfig.CurrentSensor = 0;
 
 				EEPROM.put(40, steerConfig);
 				break;

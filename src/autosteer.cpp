@@ -1,8 +1,9 @@
 #include <ArduinoJson.h>
 
+#include "main.h"
 #include "autosteer.h"
 #include "coms.h"
-#include "cmps.h"
+#include "imu.h"
 #include "gps.h"
 
 void autosteerWorker()
@@ -42,11 +43,12 @@ void autosteerWorker()
         break;
     case 3:
         switches.workSwitch = !steerSetpoints.enabled;
+        break;
     default:
         break;
     }
 
-    sendDataToAOG();
+    //sendDataToAOG();
 }
 
 void printStatus()
@@ -59,6 +61,8 @@ void printStatus()
             JsonObject candata = data.createNestedObject("CAN-Data");
             JsonObject general = data.createNestedObject("General");
             JsonObject settings = data.createNestedObject("Settings");
+            JsonObject gps = data.createNestedObject("GPS-Data");
+            JsonObject imu = data.createNestedObject("IMU-Data");
 
             candata["mRPM"] = isobusData.motorRpm;
             candata["WhlSpeed"] = isobusData.speed;
@@ -81,11 +85,6 @@ void printStatus()
             general["requestAngle"] = steerSetpoints.requestedSteerAngle;
             general["cycletime"] = timingData.cycleTime;
             general["maxcycle"] = timingData.maxCycleTime;
-            general["gps/s"] = timingData.gpsCounter;
-            general["gpsBytes/s"] = timingData.gpsByteCounter;
-            general["seconds"] = gpsData.seconds;
-            general["GPS Speed"] = gpsData.speed*1000;
-            general["Roll"] = steerSetpoints.roll;
             general["steerswitch"] = switches.steerSwitch;
             general["workswitch"] = switches.workSwitch;
             general["HydLift"] = steerSetpoints.hydLift;
@@ -93,6 +92,14 @@ void printStatus()
             settings["pulseCountsSetting"] = steerConfig.PulseCountMax;
             settings["Kp"] = steerSettings.Kp;
             settings["Ackermann"] = steerSettings.AckermanFix;
+
+            gps["Accuracy"] = gpsData.acc;
+
+            imu["Heading"] = steerSetpoints.heading;
+            imu["Roll"] = steerSetpoints.roll;
+            imu["HeadingT"] = steerSetpoints.headingInt;
+            imu["RollT"] = steerSetpoints.rollInt;
+
 
             serializeJsonPretty(data, Serial);
             

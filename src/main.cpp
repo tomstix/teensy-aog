@@ -3,7 +3,7 @@
 #include "autosteer.h"
 #include "coms.h"
 #include "gps.h"
-#include "cmps.h"
+#include "imu.h"
 
 #include <EEPROM.h>
 #define EEP_Ident 5005
@@ -54,11 +54,11 @@ void setup()
 
     loadSettings();
 
-    initCMPS();
+    initIMU();
 
-    initCAN();
+    //initCAN();
     initGPS();
-    initEthernet();
+    //initEthernet();
 
     delay(100);
 }
@@ -78,14 +78,14 @@ void loop()
         timingData.maxCycleTime = 0;
     }
 
-    udpWorker();
+    //udpWorker();
 
     gpsWorker();
 
-    cmpsWorker();
+    //cmpsWorker();
 
-    sendCurveCommand();
-    checkIsobus();
+    //sendCurveCommand();
+    //checkIsobus();
 
     printStatus();
 }

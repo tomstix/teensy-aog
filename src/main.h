@@ -3,8 +3,7 @@
 #include <Arduino.h>
 #include <Metro.h>
 
-#define GPS Serial3
-#define CMPSAddress 0x60
+#define GPS Serial5
 
 #define vbusScaleLeft 897
 #define vbusScaleRight 1039
@@ -18,7 +17,7 @@ struct Metros
 	Metro sendCurveCommand = Metro(40);
 	Metro checkIsobus = Metro(1);
 	Metro printStatus = Metro(1000);
-	Metro gps = Metro(10);
+	Metro gps = Metro(500);
 	Metro imu = Metro(5);
 	Metro sendHello = Metro(200);
 	Metro resetCycle = Metro(10000);
@@ -51,21 +50,30 @@ struct SteerConfig
 	uint8_t SteerSwitch = 0;
 	uint8_t SteerButton = 0;
 	uint8_t ShaftEncoder = 0;
+	uint8_t PressureSensor = 0;
+    uint8_t CurrentSensor = 0;
 	uint8_t PulseCountMax = 1;
-	uint8_t IsDanfoss = 0;     //sent as percent
+	uint8_t IsDanfoss = 0; //sent as percent
+
+	enum class ImuType : uint8_t
+	{
+		None = 0,
+		CMPS14 = 1,
+		BNO085 = 2
+	} imuType = ImuType::None;
 };
 extern SteerConfig steerConfig;
-//10 bytes
+//11 bytes
 
 struct SteerSettings
 {
-	uint8_t Kp = 100;  //proportional gain
-	uint8_t highPWM = 60;//max PWM value
+	uint8_t Kp = 100;	  //proportional gain
+	uint8_t highPWM = 60; //max PWM value
 	uint8_t lowPWM = 10;  //band of no action
 	uint8_t minPWM = 9;
 	uint8_t steerSensorCounts = 1;
 	int16_t wasOffset = 0;
-	uint8_t AckermanFix = 80;     //sent as percent
+	uint8_t AckermanFix = 80; //sent as percent
 };
 extern SteerSettings steerSettings;
 //8 bytes
@@ -94,12 +102,9 @@ struct SteerSetpoints
 	uint8_t switchByte = 0;
 	uint8_t pwm = 0;
 
-	bool useCMPS = true;
-
 	time_t lastPacketReceived = 0;
 };
 extern SteerSetpoints steerSetpoints;
-
 
 struct Switches
 {
@@ -110,6 +115,28 @@ extern Switches switches;
 
 struct GPSData
 {
+	float lat;
+	float lon;
+	float alt;
+
+	uint16_t year;
+	uint8_t month;
+	uint8_t day;
+	uint8_t hour;
+	uint8_t min;
+	uint8_t sec;
+	uint32_t nano;
+
+	uint8_t validFix;
+	uint8_t rtkFix;
+
+	uint8_t numSats;
+	float hdop;
+
+	float acc = 100;
+
+	float geoidSep;
+
 	long speed = 0;
 	uint8_t seconds = 0;
 };
@@ -120,13 +147,12 @@ struct VbusData
 	int16_t setCurve = 0; //Variable for Set Curve to V-Bus
 	int16_t estCurve = 0; //Variable for WAS from V-Bus
 	double steerAngle = 0;
-	bool cutoutCAN = 0;   //Variable for Cutout from V-Bus
+	bool cutoutCAN = 0; //Variable for Cutout from V-Bus
 
 	unsigned int rxCounter = 0;
 	unsigned int txCounter = 0;
 };
 extern VbusData vbusData;
-
 
 struct IsobusData
 {

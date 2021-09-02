@@ -1,118 +1,156 @@
-#include <ArduinoJson.h>
-
 #include "main.h"
 #include "autosteer.h"
-#include "coms.h"
-#include "imu.h"
-#include "gps.h"
+#include "sensors.h"
 
-void autosteerWorker()
+#include <AutoPID.h>
+
+#define THRESHOLD_PTO 200
+#define THRESHOLD_HIT 40
+
+AutoPID pid(&steerSetpoints.actualSteerAngle,
+            &steerSetpoints.requestedSteerAngle,
+            &steerSetpoints.pidOutput,
+            -steerSettings.highPWM, steerSettings.highPWM,
+            (double)steerSettings.Kp,
+            steerSettings.Ki,
+            steerSettings.Kd);
+
+void driveMotor(uint8_t pwm, double dir)
 {
-    if (benchmode)
+    if ( steerConfig.MotorDriveDirection )
     {
-        pinMode(14, INPUT);
-        int val = analogRead(14);
-        steerSetpoints.actualSteerAngle = ((float)map(val, 0, 1023, -400, 400)) * 0.1;
-        steerSetpoints.roll = ((float)map(val, 0, 1023, -300, 300)) * 0.1;
+        dir = -dir;
     }
 
-    if ((!steerSetpoints.guidanceStatus | ((millis() - steerSetpoints.lastPacketReceived) > 500)))
+    digitalWrite(PIN_ENA, HIGH);
+    digitalWrite(PIN_ENB, HIGH);
+    if (dir > 0)
     {
-        if (steerSetpoints.enabled)
-        {
-            switches.steerSwitch = 1;
-        }
-        steerSetpoints.enabled = false; //turn off steering
+        digitalWrite(PIN_INA, HIGH);
+        digitalWrite(PIN_INB, LOW);
     }
-    else //valid conditions to turn on autosteer
+    else if (dir < 0)
     {
-        if (!switches.steerSwitch || (millis() - timingData.lastCutout > 3000))
-        {
-            steerSetpoints.enabled = true; //enable steering
-            timingData.lastEnable = millis();
-        }
+        digitalWrite(PIN_INA, LOW);
+        digitalWrite(PIN_INB, HIGH);
     }
-
-    switch (steerConfig.PulseCountMax) //using PulseCount Setting to set workswitch type
+    else
     {
-    case 1:
-        switches.workSwitch = (isobusData.rearHitchPosition * 100 / 255 > (steerSettings.AckermanFix / 2));
-        break;
-    case 2:
-        switches.workSwitch = (isobusData.rearPtoRpm < ptoTreshold);
-        break;
-    case 3:
-        switches.workSwitch = !steerSetpoints.enabled;
-        break;
-    default:
-        break;
+        digitalWrite(PIN_INA, LOW);
+        digitalWrite(PIN_INB, LOW);
     }
 
-    //sendDataToAOG();
+    analogWrite(PIN_PWM, pwm);
 }
 
-void printStatus()
+void autosteerWorker(void *arg)
 {
-    if (metro.printStatus.check() == 1)
+    const TickType_t xInterval = pdMS_TO_TICKS(10);
+    TickType_t xLastWakeTime;
+    xLastWakeTime = xTaskGetTickCount();
+    pid.setTimeStep(10);
+    while (1)
     {
-        if (Serial.dtr())
+        pid.setGains((double)steerSettings.Kp, steerSettings.Ki, steerSettings.Kd);
+        pid.setOutputRange(-steerSettings.highPWM, steerSettings.highPWM);
+        vTaskDelayUntil(&xLastWakeTime, xInterval);
+
+        if (steerConfig.wasType == SteerConfig::WASType::ADS1115)
         {
-            StaticJsonDocument<1024> data;
-            JsonObject candata = data.createNestedObject("CAN-Data");
-            JsonObject general = data.createNestedObject("General");
-            JsonObject settings = data.createNestedObject("Settings");
-            JsonObject gps = data.createNestedObject("GPS-Data");
-            JsonObject imu = data.createNestedObject("IMU-Data");
+            int16_t counts = adsWorker();
 
-            candata["mRPM"] = isobusData.motorRpm;
-            candata["WhlSpeed"] = isobusData.speed;
-            candata["rHitch"] = isobusData.rearHitchPosition;
-            candata["fHitch"] = isobusData.frontHitchPosition;
-            candata["rPTO"] = isobusData.rearPtoRpm;
-            candata["fPTO"] = isobusData.frontPtoRpm;
-            candata["GMSCurve"] = isobusData.gmsEstimatedCurvature;
-            candata["GMSAngle"] = steerSetpoints.actualSteerAngle;
-            candata["VBUSCurve"] = vbusData.estCurve;
-            candata["PGNrec"] = isobusData.pgn;
-            candata["ISO-RX/s"] = isobusData.rxCounter;
-            candata["ISO-F0-RX/s"] = isobusData.rxCounterF0;
-            candata["V-RX/s"] = vbusData.rxCounter;
-            candata["V-TX/s"] = vbusData.txCounter;
-            candata["setcurve"] = vbusData.setCurve;
+            steerSetpoints.wasCountsRaw = counts;
 
-            general["Enabled"] = steerSetpoints.enabled;
-            general["Guidance Status"] = steerSetpoints.guidanceStatus;
-            general["requestAngle"] = steerSetpoints.requestedSteerAngle;
-            general["cycletime"] = timingData.cycleTime;
-            general["maxcycle"] = timingData.maxCycleTime;
-            general["steerswitch"] = switches.steerSwitch;
-            general["workswitch"] = switches.workSwitch;
-            general["HydLift"] = steerSetpoints.hydLift;
+            if (steerConfig.InvertWAS)
+            {
+                float wasTemp = (counts - 20000 - steerSettings.wasOffset);
+                steerSetpoints.actualSteerAngle = (float)(wasTemp) / -steerSettings.steerSensorCounts;
+            }
+            else
+            {
+                float wasTemp = (counts - 20000 + steerSettings.wasOffset);
+                steerSetpoints.actualSteerAngle = (float)(wasTemp) / steerSettings.steerSensorCounts;
+            }
 
-            settings["pulseCountsSetting"] = steerConfig.PulseCountMax;
-            settings["Kp"] = steerSettings.Kp;
-            settings["Ackermann"] = steerSettings.AckermanFix;
+            if (steerSetpoints.actualSteerAngle < 0)
+                steerSetpoints.actualSteerAngle = (steerSetpoints.actualSteerAngle * steerSettings.AckermanFix);
 
-            gps["Accuracy"] = gpsData.acc;
+            steerSetpoints.csenseRaw = analogRead(PIN_CSENSE);
 
-            imu["Heading"] = steerSetpoints.heading;
-            imu["Roll"] = steerSetpoints.roll;
-            imu["HeadingT"] = steerSetpoints.headingInt;
-            imu["RollT"] = steerSetpoints.rollInt;
+            if ( steerConfig.CurrentSensor )
+            {
+                steerSetpoints.csenseRaw = analogRead(PIN_CSENSE);
+                double amps = (steerSetpoints.csenseRaw / 0.31) * 140;
+                if ( amps > steerConfig.PulseCountMax )
+                {
+                    switches.steerSwitch = 1;
+                    steerSetpoints.guidanceStatus = 0;
+                }
+            }
 
+            if (steerSetpoints.guidanceStatus && (steerSetpoints.speed > 0.5) && (millis() - steerSetpoints.lastPacketReceived < 500))
+            {
+                pid.run();
 
-            serializeJsonPretty(data, Serial);
-            
+                uint8_t absPID = abs(steerSetpoints.pidOutput);
 
-            /*Serial.print(vbusData.estCurve);
-            Serial.print(',');
-            Serial.println(isobusData.gmsEstimatedCurvatureRaw);*/
+                if (absPID < steerSettings.lowPWM)
+                {
+                    absPID = 0;
+                }
+                else if (absPID < steerSettings.minPWM)
+                {
+                    absPID = steerSettings.minPWM;
+                }
+
+                driveMotor(absPID, steerSetpoints.pidOutput);
+            }
+            else
+            {
+                pid.reset();
+                digitalWrite(PIN_ENA, LOW);
+                digitalWrite(PIN_ENB, LOW);
+            }
+
+            //Serial.println(absPID);
+
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
-        isobusData.rxCounter = 0;
-        isobusData.rxCounterF0 = 0;
-        vbusData.txCounter = 0;
-        vbusData.rxCounter = 0;
-        timingData.gpsCounter = 0;
-        timingData.gpsByteCounter = 0;
     }
+}
+
+void switchWorker(void *arg)
+{
+    while (1)
+    {
+        if (steerConfig.workswitchType == SteerConfig::WorkswitchType::Hitch)
+        {
+            switches.workSwitch = (isobusData.rearHitchPosition > THRESHOLD_HIT);
+        }
+        else if (steerConfig.workswitchType == SteerConfig::WorkswitchType::PTO)
+        {
+            switches.workSwitch = (isobusData.rearPtoRpm > THRESHOLD_PTO);
+        }
+        else
+            switches.workSwitch = 1;
+
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+}
+
+void initAutosteer()
+{
+    if ((steerConfig.outputType == SteerConfig::OutputType::PWM) || (steerConfig.outputType == SteerConfig::OutputType::PWM2))
+    {
+        pinMode(PIN_ENA, OUTPUT);
+        pinMode(PIN_ENB, OUTPUT);
+        pinMode(PIN_INA, OUTPUT);
+        pinMode(PIN_INB, OUTPUT);
+        pinMode(PIN_PWM, OUTPUT);
+        pinMode(PIN_CSENSE, INPUT);
+        analogWriteFrequency(PIN_PWM, 20000);
+        xTaskCreate(autosteerWorker, NULL, 2048, NULL, 2, NULL);
+    }
+
+    xTaskCreate(switchWorker, NULL, 1024, NULL, 2, NULL);
 }

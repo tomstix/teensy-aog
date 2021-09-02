@@ -1,44 +1,19 @@
 #pragma once
 
+#define DEBUG 1
+
 #include <Arduino.h>
-#include <Metro.h>
 
-#define GPS Serial5
+#include <FreeRTOS_TEENSY4.h>
 
-#define vbusScaleLeft 897
-#define vbusScaleRight 1039
-#define WHEELBASE 2.783
-#define benchmode 0
+void DBG(String);
 
-const uint16_t ptoTreshold = 300;
+extern SemaphoreHandle_t xImuMutex;
 
-struct Metros
-{
-	Metro sendCurveCommand = Metro(40);
-	Metro checkIsobus = Metro(1);
-	Metro printStatus = Metro(1000);
-	Metro gps = Metro(500);
-	Metro imu = Metro(5);
-	Metro sendHello = Metro(200);
-	Metro resetCycle = Metro(10000);
-	Metro sendAdressClaim = Metro(1000);
-};
-extern Metros metro;
+extern QueueHandle_t gpsQueue;
 
-struct TimingData
-{
-	uint32_t lastCutout = 0;
-	uint32_t lastEnable = 0;
-
-	uint32_t cycleTime;
-	uint32_t maxCycleTime = 0;
-
-	uint8_t gpsCounter = 0;
-	uint32_t gpsByteCounter = 0;
-
-	uint32_t lastCANRx = 0;
-};
-extern TimingData timingData;
+extern volatile uint16_t ntripBytesIn;
+extern volatile uint16_t ntripBytesOut;
 
 struct SteerConfig
 {
@@ -61,22 +36,44 @@ struct SteerConfig
 		CMPS14 = 1,
 		BNO085 = 2
 	} imuType = ImuType::None;
+
+	enum class WASType : uint8_t
+	{
+		None = 0,
+		ADS1115 = 1,
+		CAN = 2
+	} wasType = WASType::ADS1115;
+
+	enum class OutputType : uint8_t
+	{
+		None = 0,
+		PWM = 1,
+		PWM2 = 2, 
+		FendtCAN = 3
+	} outputType = OutputType::None;
+
+	enum class WorkswitchType : uint8_t
+	{
+		None = 0,
+		Hitch = 1,
+		PTO = 2
+	} workswitchType = WorkswitchType::Hitch;
 };
 extern SteerConfig steerConfig;
-//11 bytes
 
 struct SteerSettings
 {
 	uint8_t Kp = 100;	  //proportional gain
+	double Ki = 2.0;
+	double Kd = 2.0;
 	uint8_t highPWM = 60; //max PWM value
 	uint8_t lowPWM = 10;  //band of no action
 	uint8_t minPWM = 9;
-	uint8_t steerSensorCounts = 1;
+	uint16_t steerSensorCounts = 100;
 	int16_t wasOffset = 0;
-	uint8_t AckermanFix = 80; //sent as percent
+	float AckermanFix = 1.0; //sent as percent
 };
 extern SteerSettings steerSettings;
-//8 bytes
 
 struct SteerSetpoints
 {
@@ -91,16 +88,16 @@ struct SteerSetpoints
 	double requestedSteerAngle = 0;
 	int16_t previousAngle = 0;
 
-	bool enabled = false;
 	byte guidanceStatus = 0;
 
-	float roll = 0;
-	int16_t rollInt = 0;
-	float heading = 0;
-	int16_t headingInt = 0;
 	double actualSteerAngle = 0;
+	int16_t wasCountsRaw = 0;
 	uint8_t switchByte = 0;
+	double pidOutput;
 	uint8_t pwm = 0;
+
+	uint16_t csenseRaw = 0;
+	uint16_t csense = 0;
 
 	time_t lastPacketReceived = 0;
 };
@@ -113,34 +110,14 @@ struct Switches
 };
 extern Switches switches;
 
-struct GPSData
+struct ImuData
 {
-	float lat;
-	float lon;
-	float alt;
-
-	uint16_t year;
-	uint8_t month;
-	uint8_t day;
-	uint8_t hour;
-	uint8_t min;
-	uint8_t sec;
-	uint32_t nano;
-
-	uint8_t validFix;
-	uint8_t rtkFix;
-
-	uint8_t numSats;
-	float hdop;
-
-	float acc = 100;
-
-	float geoidSep;
-
-	long speed = 0;
-	uint8_t seconds = 0;
+    float roll = 0;
+	float heading = 0;
+	int16_t rollInt = 0;
+	uint16_t headingInt = 0;
 };
-extern GPSData gpsData;
+extern ImuData imuData;
 
 struct VbusData
 {

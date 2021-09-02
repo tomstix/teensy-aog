@@ -1,58 +1,75 @@
+#include "main.h"
 #include "gps.h"
-#include "imu.h"
 #include "coms.h"
-#include "autosteer.h"
-
-#include <SparkFun_u-blox_GNSS_Arduino_Library.h>
-SFE_UBLOX_GNSS myGNSS;
-
-GPSData gpsData;
 
 #include <MicroNMEA.h>
-char nmeaBuffer[100];
+#include <SparkFun_u-blox_GNSS_Arduino_Library.h>
+#include <USBHost_t36.h>
+
+volatile uint16_t ntripBytesIn = 0;
+volatile uint16_t ntripBytesOut = 0;
+
+USBHost myusb;
+USBSerial userial(myusb);
+
+SFE_UBLOX_GNSS myGNSS;
+
+uint8_t nmeaBuffer[100];
 MicroNMEA nmea(nmeaBuffer, sizeof(nmeaBuffer));
 
-void gpsWorker()
-{
-	myGNSS.checkUblox();
+uint8_t ntripByte;
 
-	if(metro.gps.check() == 1)
+void gpsWorker(void *arg)
+{
+	DBG("GPS running!");
+	while (1)
 	{
-		//gpsData.acc = myGNSS.getPositionAccuracy() / 10.0;
+		while (GPS.available())
+		{
+			char c = GPS.read();
+			//Serial.write(c);
+			if (nmea.process(c))
+			{
+				String id = nmea.getMessageID();
+				if (id == "GGA")
+				{
+					sendNMEA(nmea.getSentence());
+					sendDataToAOG();
+				}
+				else if (id == "VTG")
+				{
+					sendNMEA(nmea.getSentence());
+				}
+			}
+		}
+		while (GPS.availableForWrite())
+		{
+			if ((xQueueReceive(gpsQueue, &ntripByte, 0) == pdTRUE))
+			{
+				GPS.write(ntripByte);
+			}
+			else
+				break;
+		}
+		taskYIELD();
 	}
 }
 
 void initGPS()
 {
-	GPS.begin(230400);
-	if(!myGNSS.begin(GPS))
+	DBG("Init GPS!");
+	myusb.begin();
+	GPS.begin(1000000);
+
+	if (myGNSS.begin(GPS) == true)
 	{
-		Serial.println("GPS not found at definded Port and Baudrate! Freezing.");
-		while(1);
+		DBG("GPS successfully connected!");
 	}
-	else Serial.println("GPS found!");
+	else
+	{
+		DBG("Could not connect to GPS");
+	}
+	myGNSS.setNavigationFrequency(10);
 
-	myGNSS.setUART1Output(COM_TYPE_NMEA | COM_TYPE_UBX);
-	myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
-	myGNSS.setProcessNMEAMask(SFE_UBLOX_FILTER_NMEA_ALL);
-}
-
-void SFE_UBLOX_GNSS::processNMEA(char incoming)
-{
-	//timingData.gpsByteCounter++;
-	if (nmea.process(incoming)) {
-			String id = nmea.getMessageID();
-			if (id == "GGA") {
-				timingData.gpsCounter++;
-				//sendNMEA(nmea.getSentence());
-				//autosteerWorker();
-				//Serial.println(nmea.getSentence());
-				digitalToggle(13);
-				imuWorker();
-			}
-			else if (id == "VTG") {
-				//sendNMEA(nmea.getSentence());
-				//Serial.println(nmea.getSentence());
-			}
-		}
+	xTaskCreate(gpsWorker, NULL, 4096, NULL, 2, NULL);
 }

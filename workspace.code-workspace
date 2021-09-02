@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "teensy-aog",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.tpp": "cpp"
+		}
+	}
+}

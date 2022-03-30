@@ -112,10 +112,12 @@ extern Switches switches;
 
 struct ImuData
 {
-    float roll = 0;
-	float heading = 0;
+    float roll = 0.0;
+	float heading = 0.0;
+	float pitch = 0.0;
 	int16_t rollInt = 0;
 	uint16_t headingInt = 0;
+	int16_t pitchInt = 0;
 };
 extern ImuData imuData;
 

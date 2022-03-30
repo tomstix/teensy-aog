@@ -148,7 +148,7 @@ void initAutosteer()
         pinMode(PIN_INB, OUTPUT);
         pinMode(PIN_PWM, OUTPUT);
         pinMode(PIN_CSENSE, INPUT);
-        analogWriteFrequency(PIN_PWM, 20000);
+        analogWriteFrequency(PIN_PWM, 5000);
         xTaskCreate(autosteerWorker, NULL, 2048, NULL, 2, NULL);
     }
 

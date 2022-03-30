@@ -120,9 +120,11 @@ void cmpsWorker(void *arg)
         xSemaphoreTake(xi2cMutex, xInterval);
         imuData.headingInt = requestBytes(CMPSAddress, 0x02, 2);
         imuData.rollInt = requestTwoSigned(CMPSAddress, 0x1C);
+        imuData.pitchInt = requestTwoSigned(CMPSAddress, 0x1A);
         xSemaphoreGive(xi2cMutex);
         imuData.heading = ((float)imuData.headingInt) / 10.0;
         imuData.roll = ((float)imuData.rollInt) / 10.0;
+        imuData.pitch = ((float)imuData.pitchInt) / 10.0;
     }
 }
 
@@ -157,6 +159,7 @@ void bnoWorker(void *arg)
                     quaternionToEulerRV(&sensorValue.un.arvrStabilizedRV, &ypr, true);
                     imuData.heading = 180 - ypr.yaw;
                     imuData.roll = ypr.roll;
+                    imuData.pitch = ypr.pitch;
                     break;
                 }
             }

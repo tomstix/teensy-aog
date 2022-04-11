@@ -10,6 +10,9 @@ USBSerial USB_HOST(myusb);
 
 SFE_UBLOX_GNSS GNSS;
 
+CircularBuffer<uint8_t, 512> ntripRingBuf;
+Threads::Mutex ntripRingBufLock;
+
 void pvtCallback(UBX_NAV_PVT_data_t *pvt)
 {
     char nmea[100];
@@ -23,6 +26,14 @@ void gnssThread()
     {
         GNSS.checkUblox();
         GNSS.checkCallbacks();
+        ntripRingBufLock.lock();
+        uint8_t i;
+        while( !ntripRingBuf.isEmpty() && GPS_PORT.availableForWrite() )
+        {
+            i = ntripRingBuf.pop();
+            GPS_PORT.write(i);
+        }
+        ntripRingBufLock.unlock();
         threads.yield();
     }
 }

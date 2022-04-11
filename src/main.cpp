@@ -46,8 +46,6 @@ void setup()
 
     Serial.begin(115200);
 
-    threads.addThread(heartbeat);
-
     initSD();
 
     loadSteerConfig();
@@ -58,6 +56,8 @@ void setup()
     setupSensors();
     setupCAN();
     setupAutosteer();
+
+    threads.addThread(heartbeat);
 }
 
 void loop()

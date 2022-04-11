@@ -1,6 +1,7 @@
 #include "coms.h"
 #include "json.h"
 #include "can.h"
+#include "gps.h"
 
 #include <QNEthernet.h>
 namespace qn = qindesign::network;
@@ -70,21 +71,11 @@ void sendDataToAOG()
 
     //Serial.println("Sending to AOG!");
 
-    /*ethLock.lock();
-    sendUDP.beginPacket(broadcastIP, aogSendPort);
-    sendUDP.write(sendbuffer, sizeof(sendbuffer));
-    sendUDP.endPacket();
-    ethLock.unlock();*/
     sendUDP.send(broadcastIP, aogSendPort, sendbuffer, sizeof(sendbuffer));
 }
 
 void sendNMEA(char *nmeastring, size_t size)
 {
-    /*ethLock.lock();
-    sendUDP.beginPacket(broadcastIP, aogSendPort);
-    sendUDP.print(nmeastring);
-    sendUDP.endPacket();
-    ethLock.unlock();*/
     sendUDP.send(broadcastIP, aogSendPort, nmeastring, size);
 }
 
@@ -232,6 +223,9 @@ void udpThread()
             //Serial.println("NTRIP Packet received!");
             for (int i = 0; i < ntripSize; i++)
             {
+                ntripRingBufLock.lock();
+                ntripRingBuf.push(i);
+                ntripRingBufLock.unlock();
             }
         }
         ethLock.unlock();

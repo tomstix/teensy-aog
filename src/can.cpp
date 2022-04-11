@@ -1,4 +1,3 @@
-#include "main.h"
 #include "can.h"
 
 #include <FlexCAN_T4.h>
@@ -24,9 +23,6 @@ CAN_message_t addressClaimMsg;
 CAN_message_t curveCommandMsg;
 CAN_message_t steerStateReq;
 
-VbusData vbusData;
-IsobusData isobusData;
-
 uint16_t vbusScale;
 int16_t sendAngle = 0;
 
@@ -40,13 +36,12 @@ void addressClaim()
 {
     if ((millis() - lastCANRx > 1000))
     {
-        vbus.write(addressClaimMsg); //claim VBUS address 2C
+        vbus.write(addressClaimMsg); // claim VBUS address 2C
         isobus.write(MB9, addressClaimMsg);
-        //DBG("Adress claim!");
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        threads.delay(1000);
     }
     else
-        taskYIELD();
+        threads.yield();
 }
 
 //***CAN Interrupt Handlers
@@ -54,10 +49,10 @@ void handleFromF0(const CAN_message_t &msg)
 {
     vbusData.rxCounter++;
     lastCANRx = millis();
-    //Serial.println("Message for me from F0!");
+    // Serial.println("Message for me from F0!");
     if (msg.len == 3 && msg.buf[2] == 0)
     {
-        //Serial.println("Cutout!");
+        // Serial.println("Cutout!");
         vbusData.cutoutCAN = 1;
         lastCutout = millis();
         switches.steerSwitch = 1;
@@ -65,44 +60,44 @@ void handleFromF0(const CAN_message_t &msg)
     if (msg.len == 8 && msg.buf[0] == 5 && msg.buf[1] == 10)
     {
         vbusData.estCurve = ((msg.buf[4] << 8) | msg.buf[5]);
-        //steerSetpoints.actualSteerAngle = (double)(vbusData.estCurve / (double)vbusScale);
+        // steerSetpoints.actualSteerAngle = (double)(vbusData.estCurve / (double)vbusScale);
     }
 }
 
 void handleIsoFromF0(const CAN_message_t &msg)
 {
     isobusData.rxCounterF0++;
-    //Serial.println("ISO Message from F0!");
+    // Serial.println("ISO Message from F0!");
     if ((msg.buf[0]) == 0x0F || (msg.buf[1]) == 0x60)
     {
 
         if ((msg.buf[2]) == 0x01)
         {
-            //Serial.println("\t Steering GO!! ");
-            switches.steerSwitch = 0; //enable steerswitch
-            vbusData.cutoutCAN = 0;   //reset cutout
+            Serial.println("\t Steering GO!! ");
+            switches.steerSwitch = 0; // enable steerswitch
+            vbusData.cutoutCAN = 0;   // reset cutout
             lastEnable = millis();
         }
 
         /*else
-		{
-			Serial.println("\t Steering Failed");
-		}*/
+        {
+            Serial.println("\t Steering Failed");
+        }*/
     }
 }
 
 void handleGoEnd(const CAN_message_t &msg)
 {
-    if ( msg.buf[0] == 0x15 && msg.buf[2] == 0x06 && msg.buf[3] == 0xCA)
+    if (msg.buf[0] == 0x15 && msg.buf[2] == 0x06 && msg.buf[3] == 0xCA)
     {
-        if ( msg.buf[1] == 0x22 && msg.buf[4] == 0x80)
+        if (msg.buf[1] == 0x22 && msg.buf[4] == 0x80)
         {
-            DBG("Small GO pressed");
+            Serial.println("Small GO pressed");
             switches.steerSwitch = 0;
         }
-        else if ( msg.buf[1] == 0x23 && msg.buf[4] == 0x80)
+        else if (msg.buf[1] == 0x23 && msg.buf[4] == 0x80)
         {
-            DBG("Small END pressed");
+            Serial.println("Small END pressed");
             switches.steerSwitch = 1;
         }
     }
@@ -111,20 +106,15 @@ void handleGoEnd(const CAN_message_t &msg)
 
 void sendCurveCommand(void *arg)
 {
-    const TickType_t xInterval = pdMS_TO_TICKS(CURVE_COMMAND_INTERVAL);
-    TickType_t xLastWakeTime;
-
-    xLastWakeTime = xTaskGetTickCount();
-
     while (1)
     {
-        vTaskDelayUntil(&xLastWakeTime, xInterval);
+        threads.delay(CURVE_COMMAND_INTERVAL);
         if (steerSetpoints.guidanceStatus)
         {
-            if (steerSetpoints.requestedSteerAngle > 0) //use different scale factors for left/right steering
+            if (steerSetpoints.requestedSteerAngle > 0) // use different scale factors for left/right steering
             {
                 vbusScale = vbusScaleRight;
-                if (steerSetpoints.requestedSteerAngle > 31.5) //avoid variable overflow when reaching max steer angle
+                if (steerSetpoints.requestedSteerAngle > 31.5) // avoid variable overflow when reaching max steer angle
                 {
                     steerSetpoints.requestedSteerAngle = 31.5;
                 }
@@ -137,9 +127,9 @@ void sendCurveCommand(void *arg)
                     steerSetpoints.requestedSteerAngle = -35.0;
                 }
             }
-            int16_t angleRate = steerSettings.Kp * 16; //use Kp Setting to limit steering Speed
+            int16_t angleRate = steerSettings.Kp * 16; // use Kp Setting to limit steering Speed
             sendAngle = (int16_t)(steerSetpoints.requestedSteerAngle * vbusScale);
-            if ((sendAngle - steerSetpoints.previousAngle) > angleRate) //limit steering speed a little bit
+            if ((sendAngle - steerSetpoints.previousAngle) > angleRate) // limit steering speed a little bit
             {
                 sendAngle = steerSetpoints.previousAngle + angleRate;
             }
@@ -217,31 +207,31 @@ void sendGoEnd()
     if (steerSetpoints.hydLift == 0)
         return;
 
-    if (steerSetpoints.hydLift == 1) //hydraulics down -> GO
+    if (steerSetpoints.hydLift == 1) // hydraulics down -> GO
     {
-        DBG("Sending GO!");
+        Serial.println("Sending GO!");
         goEnd.buf[1] = 0x20;
         goEnd.buf[4] = 0x80;
         goEnd.buf[5] = 0x01;
-        kbus.write(goEnd); //press
+        kbus.write(goEnd); // press
         goEnd.buf[4] = 0x00;
         goEnd.buf[5] = 0x02;
-        kbus.write(goEnd); //release
+        kbus.write(goEnd); // release
     }
-    else if (steerSetpoints.hydLift == 2) //hydLift up -> END
+    else if (steerSetpoints.hydLift == 2) // hydLift up -> END
     {
-        DBG("Sending END!");
+        Serial.println("Sending END!");
         goEnd.buf[1] = 0x21;
         goEnd.buf[4] = 0x80;
         goEnd.buf[5] = 0x01;
-        kbus.write(goEnd); //press
+        kbus.write(goEnd); // press
         goEnd.buf[4] = 0x00;
         goEnd.buf[5] = 0x02;
-        kbus.write(goEnd); //release
+        kbus.write(goEnd); // release
     }
 }
 
-void canWorker(void *arg)
+void canWorker()
 {
     while (1)
     {
@@ -252,23 +242,23 @@ void canWorker(void *arg)
         checkIsobus();
 
         addressClaim();
-        taskYIELD();
+        threads.yield();
     }
 }
 
-void canWorker2(void *arg)
+void canWorker2()
 {
-    DBG("CAN Worker2 started!");
+    Serial.println("CAN Worker2 started!");
     while (1)
     {
         kbus.events();
-        taskYIELD();
+        threads.yield();
     }
 }
 
-void initCAN()
+void setupCAN()
 {
-    //Set up CAN Messages to send
+    // Set up CAN Messages to send
     addressClaimMsg.flags.extended = true;
     addressClaimMsg.id = 0x18EEFF2C;
     addressClaimMsg.len = 8;
@@ -312,26 +302,26 @@ void initCAN()
 
     if (steerConfig.outputType == SteerConfig::OutputType::FendtCAN)
     {
-        DBG("Output Type is Fendt CAN");
+        Serial.println("Output Type is Fendt CAN");
         vbus.begin();
         vbus.setBaudRate(250000);
 
         vbus.setMaxMB(3);
-        vbus.setMB(MB0, RX, EXT); //set MB0 to catch Messages from F0 for 2C -> call handleFromF0
-        vbus.setMB(MB1, TX, EXT); //MB1 used to transmit curve command
-        vbus.setMB(MB2, TX, EXT); //MB2 used to transmit cutout request
+        vbus.setMB(MB0, RX, EXT); // set MB0 to catch Messages from F0 for 2C -> call handleFromF0
+        vbus.setMB(MB1, TX, EXT); // MB1 used to transmit curve command
+        vbus.setMB(MB2, TX, EXT); // MB2 used to transmit cutout request
         vbus.setMBFilter(REJECT_ALL);
         vbus.enableMBInterrupt(MB0);
         vbus.onReceive(MB0, handleFromF0);
         vbus.setMBUserFilter(MB0, 0x2CF0, 0xFFFF);
-        //vbus.mailboxStatus();
+        // vbus.mailboxStatus();
 
         isobus.begin();
         isobus.setBaudRate(250000);
 
         isobus.setMaxMB(10);
         isobus.enableFIFO();
-        isobus.setMB(MB8, RX, EXT); //For Messages to 2C from F0
+        isobus.setMB(MB8, RX, EXT); // For Messages to 2C from F0
         isobus.setMB(MB9, TX, EXT);
         isobus.setMBFilter(REJECT_ALL);
         isobus.setFIFOFilter(REJECT_ALL);
@@ -343,7 +333,7 @@ void initCAN()
         isobus.setMBUserFilter(MB8, 0x2CF0, 0xFFFF);
         isobus.enableMBInterrupt(MB8);
         isobus.onReceive(MB8, handleIsoFromF0);
-        //isobus.mailboxStatus();
+        isobus.mailboxStatus();
 
         kbus.begin();
         kbus.setBaudRate(250000);
@@ -351,14 +341,14 @@ void initCAN()
         kbus.setMB(MB0, TX, STD);
         kbus.setMBFilter(REJECT_ALL);
 
-        xTaskCreate(canWorker, "CANWorker", 1024, NULL, 2, NULL);
+        threads.addThread(canWorker);
 
-        xTaskCreate(sendCurveCommand, "CurveCommand", 1024, NULL, 2, NULL);
+        threads.addThread(sendCurveCommand);
     }
 
     else
     {
-        DBG("Output Type is Motor");
+        Serial.println("Output Type is Motor");
         kbus.begin();
         kbus.setBaudRate(250000);
         kbus.setMaxMB(2);
@@ -371,6 +361,6 @@ void initCAN()
 
         kbus.mailboxStatus();
 
-        xTaskCreate(canWorker2, "CANWorker2", 1024, NULL, 2, NULL);
+        threads.addThread(canWorker2);
     }
 }

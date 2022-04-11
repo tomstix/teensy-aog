@@ -1,3 +1,5 @@
+#include "main.h"
+
 extern const char *steerConfigFile;
 extern const char *steerSettingsFile;
 

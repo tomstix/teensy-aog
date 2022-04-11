@@ -1,11 +1,8 @@
-#include "main.h"
 #include "json.h"
 
 #include <ArduinoJson.h>
 #include <SD.h>
 #include <SPI.h>
-
-SemaphoreHandle_t xSDMutex;
 
 StaticJsonDocument<1024> steerSettingsJson;
 StaticJsonDocument<1024> steerConfigJson;
@@ -21,13 +18,12 @@ void printSettings()
 
 void loadSteerConfig()
 {
-    xSemaphoreTake(xSDMutex, portMAX_DELAY);
     File file = SD.open("config.txt");
 
     DeserializationError error = deserializeJson(steerConfigJson, file);
 
     if (error)
-        DBG(F("Failed to read steer config file, using default configuration"));
+        Serial.println("Failed to read steer config file, using default configuration");
 
     steerConfig.InvertWAS = steerConfigJson["InvertWAS"] | 0;
     steerConfig.IsRelayActiveHigh = steerConfigJson["IsRelayActiveHigh"] | 0;
@@ -95,18 +91,16 @@ void loadSteerConfig()
         steerConfig.workswitchType = SteerConfig::WorkswitchType::None;
 
     file.close();
-    xSemaphoreGive(xSDMutex);
 }
 
 void saveSteerConfig()
 {
-    xSemaphoreTake(xSDMutex, portMAX_DELAY);
     SD.remove("config.txt");
 
     File file = SD.open("config.txt", FILE_WRITE);
     if (!file)
     {
-        DBG(F("Failed to create steerConfig file"));
+        Serial.println("Failed to create steerConfig file");
         return;
     }
 
@@ -177,26 +171,24 @@ void saveSteerConfig()
 
     if (serializeJson(steerConfigJson, file) == 0)
     {
-        DBG(F("Failed to write steerConfig to file"));
+        Serial.println("Failed to write steerConfig to file");
     }
 
     serializeJsonPretty(steerConfigJson, Serial);
 
     file.close();
-    xSemaphoreGive(xSDMutex);
 }
 
 void loadSteerSettings()
 {
-    xSemaphoreTake(xSDMutex, portMAX_DELAY);
     File file = SD.open("settings.txt");
 
-    DBG("Loading Steer Settings");
+    Serial.println("Loading Steer Settings");
 
     DeserializationError error = deserializeJson(steerSettingsJson, file);
 
     if (error)
-        DBG(F("Failed to read steer settings file, using default configuration"));
+        Serial.println("Failed to read steer settings file, using default configuration");
 
     steerSettings.Kp = steerSettingsJson["Kp"] | 100;
     steerSettings.Ki = steerSettingsJson["Ki"] | 0;
@@ -209,19 +201,16 @@ void loadSteerSettings()
     steerSettings.AckermanFix = steerSettingsJson["AckermanFix"] | 100;
 
     file.close();
-    xSemaphoreGive(xSDMutex);
 }
 
 void saveSteerSettings()
 {
-    xSemaphoreTake(xSDMutex, portMAX_DELAY);
-
     SD.remove("settings.txt");
 
     File file = SD.open("settings.txt", FILE_WRITE);
     if (!file)
     {
-        DBG(F("Failed to create steerSettings file"));
+        Serial.println("Failed to create steerSettings file");
         return;
     }
 
@@ -237,24 +226,21 @@ void saveSteerSettings()
 
     if (serializeJson(steerSettingsJson, file) == 0)
     {
-        DBG(F("Failed to write steerSettings to file"));
+        Serial.println("Failed to write steerSettings to file");
     }
 
     serializeJsonPretty(steerSettingsJson, Serial);
 
     file.close();
-
-    xSemaphoreGive(xSDMutex);
 }
 
 void initSD()
 {
-    DBG("Initalizing SD Card");
-    xSDMutex = xSemaphoreCreateMutex();
+    Serial.println("Initalizing SD Card");
     while (!SD.begin(BUILTIN_SDCARD))
     {
-        DBG(F("Failed to initialize SD library"));
+        Serial.println("Failed to initialize SD library");
         delay(1000);
     }
-    DBG("SD Card initialized.");
+    Serial.println("SD Card initialized.");
 }

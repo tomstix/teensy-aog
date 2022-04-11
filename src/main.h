@@ -1,19 +1,7 @@
 #pragma once
 
-#define DEBUG 1
-
 #include <Arduino.h>
-
-#include <FreeRTOS_TEENSY4.h>
-
-void DBG(String);
-
-extern SemaphoreHandle_t xImuMutex;
-
-extern QueueHandle_t gpsQueue;
-
-extern volatile uint16_t ntripBytesIn;
-extern volatile uint16_t ntripBytesOut;
+#include <TeensyThreads.h>
 
 struct SteerConfig
 {

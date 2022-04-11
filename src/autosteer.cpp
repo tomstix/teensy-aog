@@ -1,4 +1,3 @@
-#include "main.h"
 #include "autosteer.h"
 #include "sensors.h"
 
@@ -45,15 +44,11 @@ void driveMotor(uint8_t pwm, double dir)
 
 void autosteerWorker(void *arg)
 {
-    const TickType_t xInterval = pdMS_TO_TICKS(10);
-    TickType_t xLastWakeTime;
-    xLastWakeTime = xTaskGetTickCount();
     pid.setTimeStep(10);
     while (1)
     {
         pid.setGains((double)steerSettings.Kp, steerSettings.Ki, steerSettings.Kd);
         pid.setOutputRange(-steerSettings.highPWM, steerSettings.highPWM);
-        vTaskDelayUntil(&xLastWakeTime, xInterval);
 
         if (steerConfig.wasType == SteerConfig::WASType::ADS1115)
         {
@@ -114,7 +109,7 @@ void autosteerWorker(void *arg)
 
             //Serial.println(absPID);
 
-            vTaskDelay(pdMS_TO_TICKS(10));
+            threads.delay(10);
         }
     }
 }
@@ -134,11 +129,11 @@ void switchWorker(void *arg)
         else
             switches.workSwitch = 1;
 
-        vTaskDelay(pdMS_TO_TICKS(200));
+        threads.delay(200);
     }
 }
 
-void initAutosteer()
+void setupAutosteer()
 {
     if ((steerConfig.outputType == SteerConfig::OutputType::PWM) || (steerConfig.outputType == SteerConfig::OutputType::PWM2))
     {
@@ -149,8 +144,8 @@ void initAutosteer()
         pinMode(PIN_PWM, OUTPUT);
         pinMode(PIN_CSENSE, INPUT);
         analogWriteFrequency(PIN_PWM, 5000);
-        xTaskCreate(autosteerWorker, NULL, 2048, NULL, 2, NULL);
+        threads.addThread(autosteerWorker);
     }
 
-    xTaskCreate(switchWorker, NULL, 1024, NULL, 2, NULL);
+    threads.addThread(switchWorker);
 }

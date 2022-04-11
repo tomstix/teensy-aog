@@ -1,27 +1,25 @@
-#include "main.h"
 #include "coms.h"
 #include "json.h"
 #include "can.h"
 
-#include <NativeEthernet.h>
-#include <NativeEthernetUdp.h>
-
-QueueHandle_t gpsQueue;
-
-SemaphoreHandle_t udpMutex;
-
-uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-IPAddress ip(192, 168, 137, 177);
-
-IPAddress broadcastIP(192, 168, 137, 255);
+#include <QNEthernet.h>
+namespace qn = qindesign::network;
 
 uint8_t aogRxBuffer[14];
 uint8_t ntripBuffer[512];
 
-EthernetUDP aogUDP;
-EthernetUDP ntripUDP;
-EthernetUDP sendUDP;
-EthernetUDP nmeaUDP;
+qn::EthernetUDP aogUDP;
+qn::EthernetUDP ntripUDP;
+qn::EthernetUDP sendUDP;
+qn::EthernetUDP nmeaUDP;
+
+Threads::Mutex ethLock;
+
+uint8_t mac[6];
+IPAddress ip(192, 168, 137, 177);
+IPAddress netmask(255, 255, 255, 0);
+IPAddress gateway(192, 168, 137, 1);
+IPAddress broadcastIP(192, 168, 137, 255);
 
 uint8_t pgn;
 uint8_t length;
@@ -38,7 +36,7 @@ void sendDataToAOG()
     int16_t steerAngle = (int16_t)(steerSetpoints.actualSteerAngle * 100);
     sendbuffer[5] = (uint8_t)steerAngle;
     sendbuffer[6] = steerAngle >> 8;
-    if (steerConfig.imuType != SteerConfig::ImuType::None)
+    /*if (steerConfig.imuType != SteerConfig::ImuType::None)
     {
         uint16_t headingInt = (uint16_t)(imuData.heading * 10.0);
         uint16_t rollInt = (int16_t)(imuData.roll * 10.0);
@@ -48,7 +46,7 @@ void sendDataToAOG()
         sendbuffer[9] = rollInt;
     }
     else
-    {
+    {*/
         //heading
         sendbuffer[7] = (uint8_t)9999;
         sendbuffer[8] = 9999 >> 8;
@@ -56,7 +54,7 @@ void sendDataToAOG()
         //roll
         sendbuffer[9] = (uint8_t)8888;
         sendbuffer[10] = 8888 >> 8;
-    }
+    //}
     steerSetpoints.switchByte = 0;
     steerSetpoints.switchByte |= (switches.steerSwitch << 1); //put steerswitch status in bit 1 position
     steerSetpoints.switchByte |= switches.workSwitch;
@@ -70,35 +68,38 @@ void sendDataToAOG()
     }
     sendbuffer[13] = CK_A;
 
-    //DBG("Sending to AOG!");
+    //Serial.println("Sending to AOG!");
 
-    xSemaphoreTake(udpMutex, pdMS_TO_TICKS(5));
+    /*ethLock.lock();
     sendUDP.beginPacket(broadcastIP, aogSendPort);
     sendUDP.write(sendbuffer, sizeof(sendbuffer));
     sendUDP.endPacket();
-    xSemaphoreGive(udpMutex);
+    ethLock.unlock();*/
+    sendUDP.send(broadcastIP, aogSendPort, sendbuffer, sizeof(sendbuffer));
 }
 
-void sendNMEA(const char *nmeastring)
+void sendNMEA(char *nmeastring, size_t size)
 {
-    xSemaphoreTake(udpMutex, pdMS_TO_TICKS(5));
+    /*ethLock.lock();
     sendUDP.beginPacket(broadcastIP, aogSendPort);
-    sendUDP.println(nmeastring);
+    sendUDP.print(nmeastring);
     sendUDP.endPacket();
-    xSemaphoreGive(udpMutex);
+    ethLock.unlock();*/
+    sendUDP.send(broadcastIP, aogSendPort, nmeastring, size);
 }
 
-void udpWorker(void *arg)
+void udpThread()
 {
     while (1)
     {
-        xSemaphoreTake(udpMutex, pdMS_TO_TICKS(5));
+        ethLock.lock();
         uint16_t packetsize = aogUDP.parsePacket();
         uint16_t ntripSize = ntripUDP.parsePacket();
 
         if (packetsize)
         {
             aogUDP.read(aogRxBuffer, sizeof(aogRxBuffer));
+            ethLock.unlock();
             if (aogRxBuffer[0] == 0x80 && aogRxBuffer[1] == 0x81 && aogRxBuffer[2] == 0x7F)
             {
                 pgn = aogRxBuffer[3];
@@ -106,7 +107,7 @@ void udpWorker(void *arg)
                 {
                 case 0xFE:
                 {
-                    //DBG("FE received");
+                    //Serial.println("FE received");
                     steerSetpoints.speed = ((float)(aogRxBuffer[5] | aogRxBuffer[5] << 8)) * 0.1;
                     steerSetpoints.guidanceStatus = aogRxBuffer[7];
                     steerSetpoints.requestedSteerAngle = (float)((int16_t)(aogRxBuffer[8] | aogRxBuffer[9] << 8)) * 0.01;
@@ -114,7 +115,7 @@ void udpWorker(void *arg)
                     steerSetpoints.sections = aogRxBuffer[11] << 8 | aogRxBuffer[12];
 
                     steerSetpoints.lastPacketReceived = millis();
-                    //sendDataToAOG();
+                    sendDataToAOG();
                     break;
                 }
 
@@ -155,14 +156,12 @@ void udpWorker(void *arg)
 
                     saveSteerSettings();
 
-                    DBG("Steer Settings received!");
 
                     break;
                 }
 
                 case 0xFB: //FB - steerConfig
                 {
-                    DBG("Steer Config received!");
                     uint8_t sett = aogRxBuffer[5];
 
                     if (bitRead(sett, 0))
@@ -203,7 +202,7 @@ void udpWorker(void *arg)
                     //Danfoss type hydraulics
                     steerConfig.IsDanfoss = aogRxBuffer[8]; //byte 8
 
-                    sett = aogRxBuffer[12];
+                    /*sett = aogRxBuffer[12];
                     if (bitRead(sett, 0))
                     {
                         if ((sett & 1) == 1)
@@ -212,7 +211,7 @@ void udpWorker(void *arg)
                             steerConfig.workswitchType = SteerConfig::WorkswitchType::PTO;
                         else
                             steerConfig.workswitchType = SteerConfig::WorkswitchType::None;
-                    }
+                    }*/
 
                     saveSteerConfig();
                     break;
@@ -224,45 +223,36 @@ void udpWorker(void *arg)
                 }
             }
         }
+        ethLock.unlock();
         if (ntripSize)
         {
+            ethLock.lock();
             ntripUDP.read(ntripBuffer, sizeof(ntripBuffer));
-            //DBG("NTRIP Packet received!");
+            ethLock.unlock();
+            //Serial.println("NTRIP Packet received!");
             for (int i = 0; i < ntripSize; i++)
             {
-                if (xQueueSend(gpsQueue, &ntripBuffer[i], 0) != pdTRUE)
-                {
-                    DBG("GPS Queue full!");
-                }
-                else{
-                    ntripBytesIn++;
-                }
             }
         }
-        xSemaphoreGive(udpMutex);
-        taskYIELD();
+        ethLock.unlock();
+        threads.yield();
     }
 }
 
-void initEthernet()
+void setupEthernet()
 {
-    DBG("Starting Ethernet!");
-    Ethernet.begin(mac, ip);
-    if (Ethernet.hardwareStatus() == EthernetNoHardware)
+    Serial.println("Starting Ethernet!");
+    qn::Ethernet.setHostname("teensy-aog");
+    qn::Ethernet.begin(ip, netmask, gateway);
+
+    if (!qn::Ethernet.waitForLink(5000))
     {
-        DBG("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
-        while (true)
-        {
-            delay(1); // do nothing, no point running without Ethernet hardware
-            digitalWrite(13, HIGH);
-        }
-    }
-    if (Ethernet.linkStatus() == LinkOFF)
-    {
-        DBG("Ethernet cable is not connected.");
+        Serial.println("Ethernet Link was not detected!");
     }
     else
-        DBG("Ethernet is running!");
+    {
+        Serial.print("Ethernet running at "); Serial.print(qn::Ethernet.linkSpeed()); Serial.println(" Mbps.");
+    }
 
     // start UDP
     aogUDP.begin(aogPort);
@@ -270,9 +260,5 @@ void initEthernet()
     sendUDP.begin(myPort);
     nmeaUDP.begin(nmeaPort);
 
-    gpsQueue = xQueueCreate(1024, sizeof(uint8_t));
-
-    udpMutex = xSemaphoreCreateMutex();
-
-    xTaskCreate(udpWorker, NULL, 4096, NULL, 2, NULL);
+    threads.addThread(udpThread);
 }

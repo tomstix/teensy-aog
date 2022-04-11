@@ -1,4 +1,7 @@
-#define GPS userial
-#define SerialGPS Serial3
+#pragma once
 
-void initGPS();
+#define GPS_PORT Serial7
+
+#include "main.h"
+
+void setupGNSS();

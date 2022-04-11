@@ -1,4 +1,3 @@
-#include "main.h"
 #include "sensors.h"
 
 #include <Wire.h>
@@ -14,16 +13,12 @@
 volatile uint16_t whlCounts = 0;
 volatile uint16_t ptoCounts = 0;
 
-SemaphoreHandle_t xi2cMutex;
-
 Adafruit_BNO08x bno08x(-1);
 sh2_SensorValue_t sensorValue;
 
 ADS1115_WE adc = ADS1115_WE();
 
-ImuData imuData;
-
-//DIN9684 interrupt handlers
+// DIN9684 interrupt handlers
 void isrPTO()
 {
     ptoCounts++;
@@ -33,13 +28,6 @@ void isrWHL()
     whlCounts++;
 }
 
-struct euler_t
-{
-    float yaw;
-    float pitch;
-    float roll;
-} ypr;
-
 void setBNOReports(void)
 {
     Serial.println("Setting desired reports");
@@ -48,6 +36,13 @@ void setBNOReports(void)
         Serial.println("Could not enable game vector");
     }
 }
+
+struct euler_t
+{
+    float yaw;
+    float pitch;
+    float roll;
+} ypr;
 
 void quaternionToEuler(float qr, float qi, float qj, float qk, euler_t *ypr, bool degrees = false)
 {
@@ -107,105 +102,69 @@ int16_t requestTwoSigned(int address, int readReg)
     return value;
 }
 
-void cmpsWorker(void *arg)
+void cmpsWorker()
 {
-    const TickType_t xInterval = pdMS_TO_TICKS(10);
-    TickType_t xLastWakeTime;
-
-    xLastWakeTime = xTaskGetTickCount();
-
     while (1)
     {
-        vTaskDelayUntil(&xLastWakeTime, xInterval);
-        xSemaphoreTake(xi2cMutex, xInterval);
         imuData.headingInt = requestBytes(CMPSAddress, 0x02, 2);
         imuData.rollInt = requestTwoSigned(CMPSAddress, 0x1C);
         imuData.pitchInt = requestTwoSigned(CMPSAddress, 0x1A);
-        xSemaphoreGive(xi2cMutex);
         imuData.heading = ((float)imuData.headingInt) / 10.0;
         imuData.roll = ((float)imuData.rollInt) / 10.0;
         imuData.pitch = ((float)imuData.pitchInt) / 10.0;
+        threads.delay(10);
     }
 }
 
-void bnoWorker(void *arg)
+void bnoWorker()
 {
-    const TickType_t xInterval = pdMS_TO_TICKS(10);
-    TickType_t xLastWakeTime;
-
-    xLastWakeTime = xTaskGetTickCount();
-
     while (1)
     {
-        vTaskDelayUntil(&xLastWakeTime, xInterval);
 
-        //Serial.println(millis());
-
-        if (xSemaphoreTake(xi2cMutex, 0) == pdTRUE)
+        if (bno08x.wasReset())
         {
+            setBNOReports();
+        }
 
-            if (bno08x.wasReset())
+        if (bno08x.getSensorEvent(&sensorValue))
+        {
+            // DBG("BNO Value received!");
+            switch (sensorValue.sensorId)
             {
-                DBG("BNO was reset");
-                setBNOReports();
-            }
-
-            if (bno08x.getSensorEvent(&sensorValue))
-            {
-                //DBG("BNO Value received!");
-                switch (sensorValue.sensorId)
-                {
-                case SH2_GAME_ROTATION_VECTOR:
-                    quaternionToEulerRV(&sensorValue.un.arvrStabilizedRV, &ypr, true);
-                    imuData.heading = 180 - ypr.yaw;
-                    imuData.roll = ypr.roll;
-                    imuData.pitch = ypr.pitch;
-                    break;
-                }
+            case SH2_GAME_ROTATION_VECTOR:
+                quaternionToEulerRV(&sensorValue.un.arvrStabilizedRV, &ypr, true);
+                imuData.heading = 180 - ypr.yaw;
+                imuData.roll = ypr.roll;
+                imuData.pitch = ypr.pitch;
+                break;
             }
         }
-        else
-            DBG("Could not get I2C Mutex.");
-        xSemaphoreGive(xi2cMutex);
     }
 }
 
 int16_t adsWorker()
 {
-    xSemaphoreTake(xi2cMutex, 0);
     int16_t res = adc.getRawResult();
-    xSemaphoreGive(xi2cMutex);
     return res;
 }
 
-void dinSignalWorker(void *args)
+void dinSignalWorker()
 {
-    const TickType_t xInterval = pdMS_TO_TICKS(1000);
-    TickType_t xLastWakeTime;
-    xLastWakeTime = xTaskGetTickCount();
-    while(1)
+    while (1)
     {
-        vTaskDelayUntil(&xLastWakeTime, xInterval);
         isobusData.rearHitchPosition = analogRead(PIN_HIT) / 10;
         isobusData.rearPtoRpm = ptoCounts / 40 * 60;
         ptoCounts = 0;
         whlCounts = 0;
+        threads.delay(1000);
     }
 }
 
-uint8_t initSensors()
+uint8_t setupSensors()
 {
-    xi2cMutex = xSemaphoreCreateMutex();
-
     Wire.begin();
 
     Wire.setClock(400000);
-
-    if (xi2cMutex == NULL)
-    {
-        Serial.println("I2C Mutex creation failed!");
-        return -1;
-    }
 
     if (!adc.init())
     {
@@ -218,7 +177,7 @@ uint8_t initSensors()
         adc.setVoltageRange_mV(ADS1115_RANGE_4096);
         adc.setConvRate(ADS1115_128_SPS);
         adc.setMeasureMode(ADS1115_CONTINOUS);
-        //adc.setCompareChannels(ADS1115_COMP_0_GND);
+        // adc.setCompareChannels(ADS1115_COMP_0_GND);
         adc.setCompareChannels(ADS1115_COMP_0_1);
         steerConfig.wasType = SteerConfig::WASType::ADS1115;
         steerConfig.outputType = SteerConfig::OutputType::PWM;
@@ -230,8 +189,7 @@ uint8_t initSensors()
 
         attachInterrupt(digitalPinToInterrupt(PIN_WHL), isrWHL, RISING);
         attachInterrupt(digitalPinToInterrupt(PIN_PTO), isrPTO, RISING);
-
-        xTaskCreate(dinSignalWorker, NULL, 4096, NULL, 2, NULL);
+        threads.addThread(dinSignalWorker);
     }
 
     if (!bno08x.begin_I2C())
@@ -244,7 +202,7 @@ uint8_t initSensors()
             Serial.print("CMPS Software Version: ");
             Serial.println(reading);
             steerConfig.imuType = SteerConfig::ImuType::CMPS14;
-            xTaskCreate(cmpsWorker, NULL, 2048, NULL, 2, NULL);
+            threads.addThread(cmpsWorker);
             return 0;
         }
         else
@@ -275,8 +233,7 @@ uint8_t initSensors()
 
         setBNOReports();
 
-
-        xTaskCreate(bnoWorker, NULL, 4096, NULL, 2, NULL);
+        threads.addThread(bnoWorker);
         return 0;
     }
     return -1;

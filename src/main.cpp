@@ -32,6 +32,12 @@ void heartbeat()
         statusJson["imuData"]["pitch"]                      =   imuData.pitch;
         statusJson["isobusData"]["rearHitchPosition"]       =   isobusData.rearHitchPosition;
         statusJson["isobusData"]["rearPtoRpm"]              =   isobusData.rearPtoRpm;
+        statusJson["transfers"]["NTRIPbps"]                 =   ntripbps;
+        statusJson["transfers"]["UDPpps"]                   =   udppps;
+        statusJson["switches"]["workswitch"]                =   switches.workSwitch;
+        statusJson["switches"]["switchType"]                =   (uint8_t)steerConfig.workswitchType;
+        ntripbps = 0;
+        udppps = 0;
         serializeJsonPretty(statusJson, Serial);
         digitalToggleFast(13);
         threads.delay(1000);
@@ -40,6 +46,7 @@ void heartbeat()
 
 void setup()
 {
+    delay(1000);
     Serial.println("teensy-aog running!");
 
     pinMode(13, 1);
@@ -50,6 +57,8 @@ void setup()
 
     loadSteerConfig();
     loadSteerSettings();
+    saveSteerConfig();
+    saveSteerSettings();
 
     setupEthernet();
     setupGNSS();

@@ -10,7 +10,7 @@ CAN_message_t rxMsg;
 
 CAN_message_t goEnd;
 
-uint8_t pduFormat;
+volatile uint8_t pduFormat;
 constexpr uint16_t j1939PgnEEC1 = 61444;
 constexpr uint16_t j1939PgnWBSD = 65096;
 constexpr uint16_t j1939PgnPHS = 65093;
@@ -23,14 +23,14 @@ CAN_message_t addressClaimMsg;
 CAN_message_t curveCommandMsg;
 CAN_message_t steerStateReq;
 
-uint16_t vbusScale;
-int16_t sendAngle = 0;
+volatile uint16_t vbusScale;
+volatile int16_t sendAngle = 0;
 
-time_t lastCANRx;
-time_t lastCutout;
-time_t lastEnable;
+volatile time_t lastCANRx;
+volatile time_t lastCutout;
+volatile time_t lastEnable;
 
-time_t lastAddressClaim = 0;
+volatile time_t lastAddressClaim = 0;
 
 void addressClaim()
 {
@@ -106,6 +106,7 @@ void handleGoEnd(const CAN_message_t &msg)
 
 void sendCurveCommand(void *arg)
 {
+    Serial.println("CAN Worker SCC started!");
     while (1)
     {
         threads.delay(CURVE_COMMAND_INTERVAL);
@@ -182,10 +183,10 @@ void checkIsobus()
             isobusData.speed = (rxMsg.buf[1] << 8 | rxMsg.buf[0]) / 1000 * 3.6;
             break;
         case j1939PgnPHS:
-            isobusData.rearHitchPosition = rxMsg.buf[0];
+            isobusData.rearHitchPosition = map(rxMsg.buf[0], 0, 255, 0, 100);
             break;
         case j1939PgnFHS:
-            isobusData.frontHitchPosition = rxMsg.buf[0];
+            isobusData.frontHitchPosition = map(rxMsg.buf[0], 0, 255, 0, 100);
             break;
         case j1939PgnRPTO:
             isobusData.rearPtoRpm = (rxMsg.buf[1] << 8 | rxMsg.buf[0]) / 8;
@@ -233,6 +234,7 @@ void sendGoEnd()
 
 void canWorker()
 {
+    Serial.println("CAN Worker started!");
     while (1)
     {
         vbus.events();

@@ -4,11 +4,13 @@
 #include <SD.h>
 #include <SPI.h>
 
-StaticJsonDocument<1024> steerSettingsJson;
-StaticJsonDocument<1024> steerConfigJson;
+StaticJsonDocument<2048> steerSettingsJson;
+StaticJsonDocument<2048> steerConfigJson;
 
 const char *steerConfigFile = "steerConfig.txt";
 const char *steerSettingsFile = "steerSettings.txt";
+
+Threads::Mutex sdCardMutex;
 
 void printSettings()
 {
@@ -18,7 +20,8 @@ void printSettings()
 
 void loadSteerConfig()
 {
-    File file = SD.open("config.txt");
+    sdCardMutex.lock();
+    File file = SD.open(steerConfigFile);
 
     DeserializationError error = deserializeJson(steerConfigJson, file);
 
@@ -91,13 +94,15 @@ void loadSteerConfig()
         steerConfig.workswitchType = SteerConfig::WorkswitchType::None;
 
     file.close();
+    sdCardMutex.unlock();
 }
 
 void saveSteerConfig()
 {
-    SD.remove("config.txt");
+    sdCardMutex.lock();
+    SD.remove(steerConfigFile);
 
-    File file = SD.open("config.txt", FILE_WRITE);
+    File file = SD.open(steerConfigFile, FILE_WRITE);
     if (!file)
     {
         Serial.println("Failed to create steerConfig file");
@@ -169,19 +174,29 @@ void saveSteerConfig()
     else
         steerConfigJson["workswitchType"] = "None";
 
-    if (serializeJson(steerConfigJson, file) == 0)
+    /*if (serializeJson(steerConfigJson, file) == 0)
     {
         Serial.println("Failed to write steerConfig to file");
-    }
+    }*/
+
+    size_t b = serializeJson(steerConfigJson, file);
+    Serial.print("Bytes written: "); Serial.println(b);
 
     serializeJsonPretty(steerConfigJson, Serial);
 
     file.close();
+
+    Serial.println("SteerConfig written!");
+
+    sdCardMutex.unlock();
+
+    yield();
 }
 
 void loadSteerSettings()
 {
-    File file = SD.open("settings.txt");
+    sdCardMutex.lock();
+    File file = SD.open(steerSettingsFile);
 
     Serial.println("Loading Steer Settings");
 
@@ -201,13 +216,15 @@ void loadSteerSettings()
     steerSettings.AckermanFix = steerSettingsJson["AckermanFix"] | 100;
 
     file.close();
+    sdCardMutex.unlock();
 }
 
 void saveSteerSettings()
 {
-    SD.remove("settings.txt");
+    sdCardMutex.lock();
+    SD.remove(steerSettingsFile);
 
-    File file = SD.open("settings.txt", FILE_WRITE);
+    File file = SD.open(steerSettingsFile, FILE_WRITE);
     if (!file)
     {
         Serial.println("Failed to create steerSettings file");
@@ -232,6 +249,9 @@ void saveSteerSettings()
     serializeJsonPretty(steerSettingsJson, Serial);
 
     file.close();
+    sdCardMutex.unlock();
+    Serial.println("SteerSettings written");
+    yield();
 }
 
 void initSD()

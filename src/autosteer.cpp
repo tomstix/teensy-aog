@@ -4,7 +4,7 @@
 #include <AutoPID.h>
 
 #define THRESHOLD_PTO 200
-#define THRESHOLD_HIT 40
+#define THRESHOLD_HIT 30
 
 AutoPID pid(&steerSetpoints.actualSteerAngle,
             &steerSetpoints.requestedSteerAngle,
@@ -44,6 +44,7 @@ void driveMotor(uint8_t pwm, double dir)
 
 void autosteerWorker(void *arg)
 {
+    Serial.println("Autosteer Worker started!");
     pid.setTimeStep(10);
     while (1)
     {
@@ -116,6 +117,7 @@ void autosteerWorker(void *arg)
 
 void switchWorker(void *arg)
 {
+    Serial.println("Switch worker started!");
     while (1)
     {
         if (steerConfig.workswitchType == SteerConfig::WorkswitchType::Hitch)

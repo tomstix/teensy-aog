@@ -104,6 +104,7 @@ int16_t requestTwoSigned(int address, int readReg)
 
 void cmpsWorker()
 {
+    Serial.println("CMPS Worker started!");
     while (1)
     {
         imuData.headingInt = requestBytes(CMPSAddress, 0x02, 2);
@@ -118,6 +119,7 @@ void cmpsWorker()
 
 void bnoWorker()
 {
+    Serial.println("BNO Worker started!");
     while (1)
     {
 

@@ -141,3 +141,6 @@ struct IsobusData
 	uint16_t pgn;
 };
 extern IsobusData isobusData;
+
+extern volatile uint16_t ntripbps;
+extern volatile uint16_t udppps;

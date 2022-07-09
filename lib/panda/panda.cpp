@@ -29,7 +29,7 @@ void makePANDAfromPVT(UBX_NAV_PVT_data_t *pvt, char *panda, float yaw, float pit
 		fixType = 4;
 	}
 
-	sprintf(panda, "$PANDA,%02u%02u%02u.%02u,%02u%2.7f,%c,%03u%3.7f,%c,%u,%u,%.1f,%.2f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f*",
+	snprintf(panda, 196, "$PANDA,%02u%02u%02u.%02u,%02u%2.7f,%c,%03u%3.7f,%c,%u,%u,%.1f,%.2f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f*",
 			pvt->hour,
 			pvt->min,
 			pvt->sec,

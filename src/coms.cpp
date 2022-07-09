@@ -6,7 +6,7 @@
 #include <QNEthernet.h>
 namespace qn = qindesign::network;
 
-uint8_t aogRxBuffer[14];
+uint8_t aogRxBuffer[32];
 uint8_t ntripBuffer[512];
 
 qn::EthernetUDP aogUDP;
@@ -16,20 +16,17 @@ qn::EthernetUDP nmeaUDP;
 
 Threads::Mutex ethLock;
 
+volatile uint16_t udppps = 0;
+
 uint8_t mac[6];
-IPAddress ip(192, 168, 137, 177);
+IPAddress ip(192, 168, 1, 177);
 IPAddress netmask(255, 255, 255, 0);
-IPAddress gateway(192, 168, 137, 1);
-IPAddress broadcastIP(192, 168, 137, 255);
+IPAddress gateway(192, 168, 1, 1);
+IPAddress broadcastIP(192, 168, 1, 255);
 
 uint8_t pgn;
 uint8_t length;
 uint8_t sendbuffer[14] = {0x80, 0x81, 0x7f, 0xFD, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0xCC};
-
-uint8_t tempHeader = 0;
-
-bool isHeaderFound;
-bool isPGNFound;
 
 void sendDataToAOG()
 {
@@ -90,6 +87,7 @@ void udpThread()
         if (packetsize)
         {
             aogUDP.read(aogRxBuffer, sizeof(aogRxBuffer));
+            udppps++;
             ethLock.unlock();
             if (aogRxBuffer[0] == 0x80 && aogRxBuffer[1] == 0x81 && aogRxBuffer[2] == 0x7F)
             {
@@ -193,16 +191,19 @@ void udpThread()
                     //Danfoss type hydraulics
                     steerConfig.IsDanfoss = aogRxBuffer[8]; //byte 8
 
-                    /*sett = aogRxBuffer[12];
-                    if (bitRead(sett, 0))
+                    if (steerConfig.SteerSwitch)
                     {
-                        if ((sett & 1) == 1)
-                            steerConfig.workswitchType = SteerConfig::WorkswitchType::Hitch;
-                        else if ((sett & 2) == 2)
-                            steerConfig.workswitchType = SteerConfig::WorkswitchType::PTO;
-                        else
-                            steerConfig.workswitchType = SteerConfig::WorkswitchType::None;
-                    }*/
+                        steerConfig.workswitchType = SteerConfig::WorkswitchType::Hitch;
+                    }
+                    else if (steerConfig.SteerButton)
+                    {
+                        steerConfig.workswitchType = SteerConfig::WorkswitchType::PTO;
+                    }
+                    else
+                    {
+                        steerConfig.workswitchType = SteerConfig::WorkswitchType::None;
+                    }
+
 
                     saveSteerConfig();
                     break;
@@ -224,7 +225,8 @@ void udpThread()
             for (int i = 0; i < ntripSize; i++)
             {
                 ntripRingBufLock.lock();
-                ntripRingBuf.push(i);
+                ntripRingBuf.push(ntripBuffer[i]);
+                //Serial.write(ntripBuffer[i]);
                 ntripRingBufLock.unlock();
             }
         }

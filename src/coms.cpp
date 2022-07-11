@@ -30,34 +30,23 @@ uint8_t sendbuffer[14] = {0x80, 0x81, 0x7f, 0xFD, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0xC
 
 void sendDataToAOG()
 {
-    //send FD Message
+    // send FD Message
     int16_t steerAngle = (int16_t)(steerSetpoints.actualSteerAngle * 100);
     sendbuffer[5] = (uint8_t)steerAngle;
     sendbuffer[6] = steerAngle >> 8;
-    /*if (steerConfig.imuType != SteerConfig::ImuType::None)
-    {
-        uint16_t headingInt = (uint16_t)(imuData.heading * 10.0);
-        uint16_t rollInt = (int16_t)(imuData.roll * 10.0);
-        sendbuffer[8] = headingInt >> 8;
-        sendbuffer[7] = headingInt;
-        sendbuffer[10] = rollInt >> 8;
-        sendbuffer[9] = rollInt;
-    }
-    else
-    {*/
-        //heading
-        sendbuffer[7] = (uint8_t)9999;
-        sendbuffer[8] = 9999 >> 8;
+    // heading
+    sendbuffer[7] = (uint8_t)9999;
+    sendbuffer[8] = 9999 >> 8;
 
-        //roll
-        sendbuffer[9] = (uint8_t)8888;
-        sendbuffer[10] = 8888 >> 8;
-    //}
+    // roll
+    sendbuffer[9] = (uint8_t)8888;
+    sendbuffer[10] = 8888 >> 8;
+
     steerSetpoints.switchByte = 0;
-    steerSetpoints.switchByte |= (switches.steerSwitch << 1); //put steerswitch status in bit 1 position
+    steerSetpoints.switchByte |= (switches.steerSwitch << 1); // put steerswitch status in bit 1 position
     steerSetpoints.switchByte |= switches.workSwitch;
     sendbuffer[11] = steerSetpoints.switchByte;
-    sendbuffer[12] = (uint8_t) abs(steerSetpoints.pidOutput);
+    sendbuffer[12] = (uint8_t)abs(steerSetpoints.pidOutput);
 
     int CK_A = 0;
     for (uint8_t i = 2; i < sizeof(sendbuffer) - 1; i++)
@@ -66,21 +55,21 @@ void sendDataToAOG()
     }
     sendbuffer[13] = CK_A;
 
-    //Serial.println("Sending to AOG!");
-
     sendUDP.send(broadcastIP, aogSendPort, sendbuffer, sizeof(sendbuffer));
 }
 
 void sendNMEA(char *nmeastring, size_t size)
 {
+    ethLock.lock(10);
     sendUDP.send(broadcastIP, aogSendPort, nmeastring, size);
+    ethLock.unlock();
 }
 
 void udpThread()
 {
     while (1)
     {
-        ethLock.lock();
+        ethLock.lock(10);
         uint16_t packetsize = aogUDP.parsePacket();
         uint16_t ntripSize = ntripUDP.parsePacket();
 
@@ -96,7 +85,7 @@ void udpThread()
                 {
                 case 0xFE:
                 {
-                    //Serial.println("FE received");
+                    // Serial.println("FE received");
                     steerSetpoints.speed = ((float)(aogRxBuffer[5] | aogRxBuffer[5] << 8)) * 0.1;
                     steerSetpoints.guidanceStatus = aogRxBuffer[7];
                     steerSetpoints.requestedSteerAngle = (float)((int16_t)(aogRxBuffer[8] | aogRxBuffer[9] << 8)) * 0.01;
@@ -115,7 +104,7 @@ void udpThread()
                     steerSetpoints.hydLift = aogRxBuffer[7];
                     steerSetpoints.tram = aogRxBuffer[8];
 
-                    if ( steerSetpoints.hydLift != steerSetpoints. hydLiftPrev )
+                    if (steerSetpoints.hydLift != steerSetpoints.hydLiftPrev)
                     {
                         steerSetpoints.hydLiftPrev = steerSetpoints.hydLift;
                         sendGoEnd();
@@ -125,7 +114,7 @@ void udpThread()
 
                 case 0xFC:
                 {
-                    //PID values
+                    // PID values
                     steerSettings.Kp = ((float)aogRxBuffer[5]); // read Kp from AgOpenGPS
                     steerSettings.Kp *= 0.5;
 
@@ -133,23 +122,22 @@ void udpThread()
 
                     steerSettings.lowPWM = (float)aogRxBuffer[7]; // read lowPWM from AgOpenGPS
 
-                    steerSettings.minPWM = aogRxBuffer[8]; //read the minimum amount of PWM for instant on
+                    steerSettings.minPWM = aogRxBuffer[8]; // read the minimum amount of PWM for instant on
 
-                    steerSettings.steerSensorCounts = aogRxBuffer[9] + 100; //sent as setting displayed in AOG
+                    steerSettings.steerSensorCounts = aogRxBuffer[9] + 100; // sent as setting displayed in AOG
 
-                    steerSettings.wasOffset = (aogRxBuffer[10]); //read was zero offset Hi
+                    steerSettings.wasOffset = (aogRxBuffer[10]); // read was zero offset Hi
 
-                    steerSettings.wasOffset |= (aogRxBuffer[11] << 8); //read was zero offset Lo
+                    steerSettings.wasOffset |= (aogRxBuffer[11] << 8); // read was zero offset Lo
 
                     steerSettings.AckermanFix = (float)(aogRxBuffer[12]) / 100.0;
 
                     saveSteerSettings();
 
-
                     break;
                 }
 
-                case 0xFB: //FB - steerConfig
+                case 0xFB: // FB - steerConfig
                 {
                     uint8_t sett = aogRxBuffer[5];
 
@@ -188,8 +176,8 @@ void udpThread()
 
                     steerConfig.PulseCountMax = aogRxBuffer[6];
 
-                    //Danfoss type hydraulics
-                    steerConfig.IsDanfoss = aogRxBuffer[8]; //byte 8
+                    // Danfoss type hydraulics
+                    steerConfig.IsDanfoss = aogRxBuffer[8]; // byte 8
 
                     if (steerConfig.SteerSwitch)
                     {
@@ -203,7 +191,6 @@ void udpThread()
                     {
                         steerConfig.workswitchType = SteerConfig::WorkswitchType::None;
                     }
-
 
                     saveSteerConfig();
                     break;
@@ -221,12 +208,10 @@ void udpThread()
             ethLock.lock();
             ntripUDP.read(ntripBuffer, sizeof(ntripBuffer));
             ethLock.unlock();
-            //Serial.println("NTRIP Packet received!");
             for (int i = 0; i < ntripSize; i++)
             {
                 ntripRingBufLock.lock();
                 ntripRingBuf.push(ntripBuffer[i]);
-                //Serial.write(ntripBuffer[i]);
                 ntripRingBufLock.unlock();
             }
         }
@@ -247,7 +232,9 @@ void setupEthernet()
     }
     else
     {
-        Serial.print("Ethernet running at "); Serial.print(qn::Ethernet.linkSpeed()); Serial.println(" Mbps.");
+        Serial.print("Ethernet running at ");
+        Serial.print(qn::Ethernet.linkSpeed());
+        Serial.println(" Mbps.");
     }
 
     // start UDP

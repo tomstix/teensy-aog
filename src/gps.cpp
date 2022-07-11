@@ -12,9 +12,10 @@ Threads::Mutex ntripRingBufLock;
 
 volatile uint16_t ntripbps;
 
+char nmea[200];
+
 void pvtCallback(UBX_NAV_PVT_data_t *pvt)
 {
-    char nmea[200];
     makePANDAfromPVT(pvt, nmea, imuData.heading, imuData.roll, imuData.pitch);
     sendNMEA(nmea, strlen(nmea));
 }

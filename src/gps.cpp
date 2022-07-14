@@ -12,12 +12,24 @@ Threads::Mutex ntripRingBufLock;
 
 volatile uint16_t ntripbps;
 
+bool gpsFound = false;
+
+GNSSData gnssData;
+
 char nmea[200];
 
 void pvtCallback(UBX_NAV_PVT_data_t *pvt)
 {
+    gnssData.lastGPSFix = millis();
     makePANDAfromPVT(pvt, nmea, imuData.heading, imuData.roll, imuData.pitch);
     sendNMEA(nmea, strlen(nmea));
+    gnssData.lat = (double)pvt->lat / 10000000;
+    gnssData.lon = (double)pvt->lon / 10000000;
+    gnssData.fixType = pvt->fixType;
+    gnssData.numSV = pvt->numSV;
+    gnssData.hAcc = pvt->hAcc;
+    gnssData.vAcc = pvt->vAcc;
+    gnssData.gSpeed = pvt->gSpeed;
 }
 
 void gnssThread()
@@ -32,7 +44,6 @@ void gnssThread()
         while (!ntripRingBuf.isEmpty() && GPS_PORT.availableForWrite())
         {
             i = ntripRingBuf.first();
-            //Serial.write(i);
             GPS_PORT.write(i);
             ntripbps++;
             ntripRingBuf.shift();
@@ -45,19 +56,17 @@ void gnssThread()
 void setupGNSS()
 {
     GPS_PORT.begin(115200);
-
     Serial.println("Setting up GPS!");
-    if (GNSS.begin(GPS_PORT) == false)
+    if (GNSS.begin(GPS_PORT) == true)
     {
-        Serial.println(F("u-blox GNSS not detected. Please check wiring. Freezing."));
-        while (1)
-            ;
+        Serial.println("GPS found!");
+        GNSS.setUART1Output(COM_TYPE_UBX);
+        GNSS.setNavigationFrequency(10);
+        GNSS.setAutoPVTcallbackPtr(pvtCallback);
+        threads.addThread(gnssThread);
     }
-    Serial.println("GPS found!");
-
-    GNSS.setUART1Output(COM_TYPE_UBX);
-    GNSS.setNavigationFrequency(10);
-    GNSS.setAutoPVTcallbackPtr(pvtCallback);
-
-    threads.addThread(gnssThread);
+    else
+    {
+        Serial.println(F("u-blox GNSS not detected. Please check wiring."));
+    }
 }

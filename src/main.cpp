@@ -24,21 +24,25 @@ void heartbeat()
 {
     while (1)
     {
-        statusJson["steerSetpoints"]["steerAngleSetpoint"]  =   steerSetpoints.requestedSteerAngle;
-        statusJson["steerSetpoints"]["guidanceStatus"]      =   steerSetpoints.guidanceStatus;
-        statusJson["steerSetpoints"]["actualSteerAngle"]    =   steerSetpoints.actualSteerAngle;
-        statusJson["imuData"]["roll"]                       =   imuData.roll;
-        statusJson["imuData"]["heading"]                    =   imuData.heading;
-        statusJson["imuData"]["pitch"]                      =   imuData.pitch;
-        statusJson["isobusData"]["rearHitchPosition"]       =   isobusData.rearHitchPosition;
-        statusJson["isobusData"]["rearPtoRpm"]              =   isobusData.rearPtoRpm;
-        statusJson["transfers"]["NTRIPbps"]                 =   ntripbps;
-        statusJson["transfers"]["UDPpps"]                   =   udppps;
-        statusJson["switches"]["workswitch"]                =   switches.workSwitch;
-        statusJson["switches"]["switchType"]                =   (uint8_t)steerConfig.workswitchType;
+        statusJson["steerSetpoints"]["steerAngleSetpoint"]  = steerSetpoints.requestedSteerAngle;
+        statusJson["steerSetpoints"]["guidanceStatus"]      = steerSetpoints.guidanceStatus;
+        statusJson["steerSetpoints"]["actualSteerAngle"]    = steerSetpoints.actualSteerAngle;
+        statusJson["imuData"]["roll"]                       = imuData.roll;
+        statusJson["imuData"]["heading"]                    = imuData.heading;
+        statusJson["imuData"]["pitch"]                      = imuData.pitch;
+        statusJson["isobusData"]["rearHitchPosition"]       = isobusData.rearHitchPosition;
+        statusJson["isobusData"]["rearPtoRpm"]              = isobusData.rearPtoRpm;
+        statusJson["transfers"]["NTRIPbps"]                 = ntripbps;
+        statusJson["transfers"]["UDPpps"]                   = udppps;
+        statusJson["switches"]["workswitch"]                = switches.workSwitch;
+        statusJson["switches"]["switchType"]                = (uint8_t)steerConfig.workswitchType;
+        statusJson["gnssData"]                              = gnssData.to_json();
         ntripbps = 0;
         udppps = 0;
-        serializeJsonPretty(statusJson, Serial);
+        if (Serial.dtr())
+        {
+            serializeJsonPretty(statusJson, Serial);
+        }
         digitalToggleFast(13);
         threads.delay(1000);
     }

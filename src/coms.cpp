@@ -61,7 +61,7 @@ void sendDataToAOG()
 void sendNMEA(char *nmeastring, size_t size)
 {
     ethLock.lock(10);
-    sendUDP.send(broadcastIP, aogSendPort, nmeastring, size);
+    sendUDP.send(broadcastIP, aogSendPort, (uint8_t*)nmeastring, size);
     ethLock.unlock();
 }
 

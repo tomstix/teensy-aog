@@ -64,5 +64,5 @@ void makePANDAfromPVT(UBX_NAV_PVT_data_t *pvt, char *panda, float yaw, float rol
 		sum ^= tmp; // Build checksum
 	}
 
-	sprintf(panda + strlen(panda), "%X\r\n", sum);
+	sprintf(panda + strlen(panda), "%02X\r\n", sum);
 }

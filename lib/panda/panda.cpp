@@ -3,10 +3,10 @@
 void makePANDAfromPVT(UBX_NAV_PVT_data_t *pvt, char *panda, float yaw, float roll, float pitch)
 {
 	uint8_t latDegrees = pvt->lat / 10000000;
-	float latMinutes = (((float)pvt->lat / 10000000.0) - (float)latDegrees) * 60.0;
+	double latMinutes = (((double)pvt->lat / 10000000.0) - (double)latDegrees) * 60.0;
 
 	uint8_t lonDegrees = pvt->lon / 10000000;
-	float lonMinutes = (((float)pvt->lon / 10000000.0) - (float)lonDegrees) * 60.0;
+	double lonMinutes = (((double)pvt->lon / 10000000.0) - (double)lonDegrees) * 60.0;
 
 	char lonLetter = (pvt->lon > 0) ? 'E' : 'W';
 	char latLetter = (pvt->lat > 0) ? 'N' : 'S';
@@ -29,7 +29,7 @@ void makePANDAfromPVT(UBX_NAV_PVT_data_t *pvt, char *panda, float yaw, float rol
 		fixType = 4;
 	}
 
-	snprintf(panda, 196, "$PANDA,%02u%02u%02u.%02u,%02u%2.7f,%c,%03u%3.7f,%c,%u,%u,%.1f,%.2f,%.1f,%.1f,%04u,%02i,%02i,%02u*",
+	snprintf(panda, 196, "$PANDA,%02u%02u%02u.%02u,%02u%2.8f,%c,%03u%3.8f,%c,%u,%u,%.1f,%.2f,%.1f,%.1f,%04u,%02i,%02i,%02u*",
 			pvt->hour,
 			pvt->min,
 			pvt->sec,

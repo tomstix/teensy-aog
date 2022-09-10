@@ -26,6 +26,7 @@ void heartbeat()
     {
         statusJson["steerSetpoints"]["steerAngleSetpoint"]  = steerSetpoints.requestedSteerAngle;
         statusJson["steerSetpoints"]["guidanceStatus"]      = steerSetpoints.guidanceStatus;
+        statusJson["steerSetpoints"]["wasCounts"]           = steerSetpoints.wasCountsRaw;
         statusJson["steerSetpoints"]["actualSteerAngle"]    = steerSetpoints.actualSteerAngle;
         statusJson["imuData"]["roll"]                       = imuData.roll;
         statusJson["imuData"]["heading"]                    = imuData.heading;
@@ -36,7 +37,6 @@ void heartbeat()
         statusJson["transfers"]["UDPpps"]                   = udppps;
         statusJson["switches"]["workswitch"]                = switches.workSwitch;
         statusJson["switches"]["switchType"]                = (uint8_t)steerConfig.workswitchType;
-        statusJson["gnssData"]                              = gnssData.to_json();
         ntripbps = 0;
         udppps = 0;
         if (Serial.dtr())
@@ -50,7 +50,7 @@ void heartbeat()
 
 void setup()
 {
-    delay(1000);
+    delay(2000);
     Serial.println("teensy-aog running!");
 
     pinMode(13, 1);

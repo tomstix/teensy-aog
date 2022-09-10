@@ -159,19 +159,6 @@ struct GNSSData
 	double gSpeed;
 	uint8_t numSV;
 	uint32_t lastGPSFix;
-	StaticJsonDocument<512> to_json()
-	{
-		StaticJsonDocument<512> json;
-		json["Lat"] = lat;
-		json["Lon"] = lon;
-		json["fixType"] = fixType;
-		json["hAcc"] = hAcc;
-		json["vAcc"] = vAcc;
-		json["gSpeed"] = gSpeed;
-		json["numSV"] = numSV;
-		json["lastInterval"] = millis() - lastGPSFix;
-		return json;
-	}
 };
 extern GNSSData gnssData;
 

@@ -176,11 +176,12 @@ uint8_t setupSensors()
     }
     else
     {
+        Serial.println("Setting up ADS!");
         adc.setVoltageRange_mV(ADS1115_RANGE_4096);
         adc.setConvRate(ADS1115_128_SPS);
         adc.setMeasureMode(ADS1115_CONTINOUS);
-        // adc.setCompareChannels(ADS1115_COMP_0_GND);
-        adc.setCompareChannels(ADS1115_COMP_0_1);
+        adc.setCompareChannels(ADS1115_COMP_1_GND);
+        // adc.setCompareChannels(ADS1115_COMP_0_1);
         steerConfig.wasType = SteerConfig::WASType::ADS1115;
         steerConfig.outputType = SteerConfig::OutputType::PWM;
 
@@ -188,7 +189,6 @@ uint8_t setupSensors()
         pinMode(PIN_HIT_ONOFF, INPUT);
         pinMode(PIN_PTO, INPUT);
         pinMode(PIN_WHL, INPUT);
-
         attachInterrupt(digitalPinToInterrupt(PIN_WHL), isrWHL, RISING);
         attachInterrupt(digitalPinToInterrupt(PIN_PTO), isrPTO, RISING);
         threads.addThread(dinSignalWorker);

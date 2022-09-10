@@ -1,6 +1,6 @@
 #pragma once
 
-#define GPS_PORT Serial3
+#define GPS_PORT Serial4
 
 #include "main.h"
 

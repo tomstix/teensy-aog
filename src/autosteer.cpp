@@ -55,6 +55,8 @@ void autosteerWorker(void *arg)
         {
             int16_t counts = adsWorker();
 
+            //Serial.print("Counts: "); Serial.println(counts);
+
             steerSetpoints.wasCountsRaw = counts;
 
             if (steerConfig.InvertWAS)
@@ -106,6 +108,7 @@ void autosteerWorker(void *arg)
                 pid.reset();
                 digitalWrite(PIN_ENA, LOW);
                 digitalWrite(PIN_ENB, LOW);
+                analogWrite(PIN_PWM, 0);
             }
 
             //Serial.println(absPID);

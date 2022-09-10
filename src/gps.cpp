@@ -21,7 +21,11 @@ char nmea[200];
 void pvtCallback(UBX_NAV_PVT_data_t *pvt)
 {
     gnssData.lastGPSFix = millis();
-    makePANDAfromPVT(pvt, nmea, imuData.heading, imuData.roll, imuData.pitch);
+    GNSS.getHPPOSLLH(50);
+    int8_t latHp = GNSS.getHighResLatitudeHp();
+    int8_t lonHp = GNSS.getHighResLongitudeHp();
+    makePANDAfromPVT(pvt, latHp, lonHp, nmea, imuData.heading, imuData.roll, imuData.pitch);
+    //Serial.println(nmea);
     sendNMEA(nmea, strlen(nmea));
     gnssData.lat = (double)pvt->lat / 10000000;
     gnssData.lon = (double)pvt->lon / 10000000;
@@ -39,6 +43,7 @@ void gnssThread()
     {
         GNSS.checkUblox();
         GNSS.checkCallbacks();
+
         ntripRingBufLock.lock();
         uint8_t i;
         while (!ntripRingBuf.isEmpty() && GPS_PORT.availableForWrite())
@@ -63,7 +68,9 @@ void setupGNSS()
         GNSS.setUART1Output(COM_TYPE_UBX);
         GNSS.setNavigationFrequency(10);
         GNSS.setAutoPVTcallbackPtr(pvtCallback);
-        threads.addThread(gnssThread);
+        GNSS.setAutoHPPOSLLH(true);
+        GNSS.saveConfiguration();
+        threads.addThread(gnssThread, 0, 8096);
     }
     else
     {

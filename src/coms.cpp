@@ -124,7 +124,7 @@ void udpThread()
 
                     steerSettings.minPWM = aogRxBuffer[8]; // read the minimum amount of PWM for instant on
 
-                    steerSettings.steerSensorCounts = aogRxBuffer[9] + 100; // sent as setting displayed in AOG
+                    steerSettings.steerSensorCounts = aogRxBuffer[9] + 200; // sent as setting displayed in AOG
 
                     steerSettings.wasOffset = (aogRxBuffer[10]); // read was zero offset Hi
 

@@ -69,7 +69,7 @@ void setup()
     setupEthernet();
     setupGNSS();
     setupSensors();
-    setupCAN();
+    //setupCAN();
     setupAutosteer();
 
     threads.addThread(heartbeat);

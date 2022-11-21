@@ -57,7 +57,7 @@ void autosteerWorker(void *arg)
 
             //Serial.print("Counts: "); Serial.println(counts);
 
-            steerSetpoints.wasCountsRaw = counts;
+            steerSetpoints.wasCountsRaw = counts - 14000;
 
             double degreesTemp = (double)steerSetpoints.wasCountsRaw / (double)steerSettings.steerSensorCounts;
             if (steerConfig.InvertWAS)

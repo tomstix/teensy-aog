@@ -128,7 +128,7 @@ void udpThread()
 
                     steerSettings.wasOffset = (aogRxBuffer[10]); // read was zero offset Hi
 
-                    steerSettings.wasOffset |= (aogRxBuffer[11] << 8); // read was zero offset Lo
+                    steerSettings.wasOffset |= (aogRxBuffer[11] << 8); // read was zero offset Lo in Deg * 100
 
                     steerSettings.AckermanFix = (float)(aogRxBuffer[12]) / 100.0;
 

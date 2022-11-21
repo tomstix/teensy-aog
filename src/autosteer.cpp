@@ -59,16 +59,13 @@ void autosteerWorker(void *arg)
 
             steerSetpoints.wasCountsRaw = counts;
 
+            double degreesTemp = (double)steerSetpoints.wasCountsRaw / (double)steerSettings.steerSensorCounts;
             if (steerConfig.InvertWAS)
             {
-                float wasTemp = (counts - 20000 - steerSettings.wasOffset);
-                steerSetpoints.actualSteerAngle = (float)(wasTemp) / -steerSettings.steerSensorCounts;
+                degreesTemp = -degreesTemp;
             }
-            else
-            {
-                float wasTemp = (counts - 20000 + steerSettings.wasOffset);
-                steerSetpoints.actualSteerAngle = (float)(wasTemp) / steerSettings.steerSensorCounts;
-            }
+
+            steerSetpoints.actualSteerAngle = degreesTemp - ((double)steerSettings.wasOffset / 100.0);
 
             if (steerSetpoints.actualSteerAngle < 0)
                 steerSetpoints.actualSteerAngle = (steerSetpoints.actualSteerAngle * steerSettings.AckermanFix);
